@@ -23,6 +23,6 @@ class WorkController extends Controller
      */
     public function profile()
     {
-        return view('work.profile');
+        return view('work-profile');
     }
 }
