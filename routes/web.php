@@ -22,3 +22,4 @@ Route::get('/welcome', function () {
 Auth::routes();
 
 Route::get('/home', 'HomeController@index');
+Route::get('/work/profile', 'WorkController@profile');
