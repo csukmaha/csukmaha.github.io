@@ -6,10 +6,10 @@
     <body>
 
         <script>
-            var testObject = { 'one': 1, 'two': 2, 'three': 3 };
+            var peopleObject = [{ 'one': 1, 'two': 2, 'three': 3 }, { 'one': 1, 'two': 2, 'three': 3 }];
 
             // Put the object into storage
-            localStorage.setItem('testObject', JSON.stringify(testObject));
+            localStorage.setItem('testObject', JSON.stringify(peopleObject));
 
             // Retrieve the object from storage
             var retrievedObject = localStorage.getItem('testObject');
