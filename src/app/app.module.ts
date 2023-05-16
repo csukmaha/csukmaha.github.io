@@ -10,7 +10,6 @@ import { RegisterComponent } from './auth/register/register.component';
 import { PersonComponent } from './data/person/person.component';
 import { GroupComponent } from './data/group/group.component';
 import { FieldComponent } from './data/field/field.component';
-import { DashboardComponent } from './data/dashboard/dashboard.component';
 import { HeaderComponent } from './element/header/header.component';
 import { FooterComponent } from './element/footer/footer.component';
 import { CanvasComponent } from './canvas/canvas.component';
@@ -32,7 +31,6 @@ import { UserPermissionComponent } from './auth/admin/user-permission/user-permi
     PersonComponent,
     GroupComponent,
     FieldComponent,
-    DashboardComponent,
     HeaderComponent,
     FooterComponent,
     CanvasComponent,
