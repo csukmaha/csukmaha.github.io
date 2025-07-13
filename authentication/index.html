@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAO-Inspired UI with JWT Simulation</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for SAO-inspired look */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117; /* Dark background */
+            color: #e6edf3; /* Light text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        .sao-container {
+            background-color: rgba(18, 24, 30, 0.8); /* Slightly lighter, translucent dark */
+            border: 2px solid #00bfff; /* Neon blue border */
+            border-radius: 12px; /* Rounded corners */
+            padding: 2.5rem;
+            box-shadow: 0 0 30px rgba(0, 191, 255, 0.5); /* Neon glow effect */
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            backdrop-filter: blur(5px); /* Frosted glass effect */
+        }
+
+        .sao-input, .sao-button {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        .sao-input {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid #00bfff;
+            color: #e6edf3;
+            outline: none;
+        }
+
+        .sao-input:focus {
+            border-color: #00eaff;
+            box-shadow: 0 0 10px rgba(0, 234, 255, 0.7);
+        }
+
+        .sao-button {
+            background-color: #00bfff; /* Neon blue button */
+            color: #0d1117;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+        }
+
+        .sao-button:hover {
+            background-color: #00eaff; /* Lighter neon blue on hover */
+            box-shadow: 0 0 15px rgba(0, 234, 255, 0.8);
+        }
+
+        .sao-message {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .sao-message.success {
+            background-color: rgba(0, 255, 0, 0.2);
+            color: #0f0;
+            border: 1px solid #0f0;
+        }
+
+        .sao-message.error {
+            background-color: rgba(255, 0, 0, 0.2);
+            color: #f00;
+            border: 1px solid #f00;
+        }
+
+        .sao-protected-content {
+            border: 1px dashed #00bfff;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            border-radius: 8px;
+            text-align: left;
+            background-color: rgba(0, 191, 255, 0.05);
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="sao-container">
+        <h1 class="text-3xl font-bold mb-6 text-white">SAO System Login</h1>
+
+        <!-- Login Section -->
+        <div id="login-section">
+            <input type="text" id="username-input" class="sao-input" placeholder="Username (e.g., Kirito)">
+            <input type="password" id="password-input" class="sao-input" placeholder="Password (e.g., asuna)">
+            <button id="login-button" class="sao-button">Login</button>
+            <div id="login-message" class="sao-message hidden"></div>
+        </div>
+
+        <!-- Authenticated Section -->
+        <div id="authenticated-section" class="hidden">
+            <p class="text-lg mb-4">Welcome, <span id="display-username" class="font-bold text-cyan-400"></span>!</p>
+            <button id="access-protected-button" class="sao-button mb-4">Access Protected Data</button>
+            <div id="protected-content-display" class="sao-protected-content hidden">
+                <h2 class="text-xl font-semibold mb-2 text-white">Protected Data:</h2>
+                <p>This is highly classified information only accessible by authorized users.</p>
+                <ul class="list-disc list-inside mt-2">
+                    <li>Item A: Encrypted schematics</li>
+                    <li>Item B: Server logs (restricted)</li>
+                    <li>Item C: Mission parameters</li>
+                </ul>
+                <div id="protected-message" class="sao-message mt-4 hidden"></div>
+            </div>
+            <button id="logout-button" class="sao-button bg-red-600 hover:bg-red-700">Logout</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // This JavaScript code simulates the output of a TypeScript compilation.
+        // In a real TypeScript project, this logic would be in a .ts file
+        // and compiled to .js before being included in the HTML.
+
+        const TOKEN_KEY = 'jwt_token'; // Key for storing the token in localStorage
+
+        // Get references to UI elements
+        const loginSection = document.getElementById('login-section');
+        const authenticatedSection = document.getElementById('authenticated-section');
+        const usernameInput = document.getElementById('username-input');
+        const passwordInput = document.getElementById('password-input');
+        const loginButton = document.getElementById('login-button');
+        const loginMessage = document.getElementById('login-message');
+        const displayUsername = document.getElementById('display-username');
+        const accessProtectedButton = document.getElementById('access-protected-button');
+        const protectedContentDisplay = document.getElementById('protected-content-display');
+        const protectedMessage = document.getElementById('protected-message');
+        const logoutButton = document.getElementById('logout-button');
+
+        /**
+         * Displays a message in the specified message element.
+         * @param {HTMLElement} element - The HTML element to display the message in.
+         * @param {string} message - The message text.
+         * @param {boolean} isSuccess - True for success message, false for error.
+         */
+        function showMessage(element, message, isSuccess) {
+            element.textContent = message;
+            element.classList.remove('hidden', 'success', 'error');
+            element.classList.add(isSuccess ? 'success' : 'error');
+        }
+
+        /**
+         * Simulates a login request and generates a dummy JWT.
+         */
+        async function simulateLogin() {
+            const username = usernameInput.value;
+            const password = passwordInput.value;
+
+            // Simple validation (for demo purposes)
+            if (!username || !password) {
+                showMessage(loginMessage, 'Please enter both username and password.', false);
+                return;
+            }
+
+            // Simulate an API call delay
+            showMessage(loginMessage, 'Attempting login...', true);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Simulate successful login for specific credentials
+            if (username === 'Kirito' && password === 'asuna') {
+                // In a real app, the backend would generate and return a real JWT.
+                // Here, we create a dummy one with a simulated expiration.
+                const payload = {
+                    userId: username,
+                    exp: Math.floor(Date.now() / 1000) + (60 * 60) // Token expires in 1 hour
+                };
+                // Base64 encode a dummy header and payload to simulate a JWT structure
+                const dummyToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${btoa(JSON.stringify(payload))}.dummy_signature`;
+
+                localStorage.setItem(TOKEN_KEY, dummyToken);
+                showMessage(loginMessage, 'Login successful!', true);
+                updateUI(); // Update UI after successful login
+            } else {
+                showMessage(loginMessage, 'Invalid username or password.', false);
+            }
+        }
+
+        /**
+         * Simulates accessing protected content using the stored JWT.
+         */
+        async function simulateAccessProtectedContent() {
+            const token = localStorage.getItem(TOKEN_KEY);
+
+            if (!token) {
+                showMessage(protectedMessage, 'No token found. Please log in.', false);
+                protectedContentDisplay.classList.add('hidden');
+                return;
+            }
+
+            // In a real app, you'd send this token to the backend for validation.
+            // Here, we'll parse our dummy token and check its simulated expiration.
+            try {
+                // Extract payload from dummy token (second part, base64 decoded)
+                const [, encodedPayload] = token.split('.');
+                if (!encodedPayload) {
+                    throw new Error("Invalid token format.");
+                }
+                const payload = JSON.parse(atob(encodedPayload));
+
+                if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+                    // Token expired
+                    showMessage(protectedMessage, 'Session expired. Please log in again.', false);
+                    localStorage.removeItem(TOKEN_KEY); // Remove expired token
+                    updateUI(); // Update UI to show login form
+                    return;
+                }
+
+                // If token is present and (simulated) valid
+                showMessage(protectedMessage, 'Access granted! Displaying protected data.', true);
+                protectedContentDisplay.classList.remove('hidden');
+            } catch (error) {
+                showMessage(protectedMessage, `Token validation failed: ${error.message}`, false);
+                localStorage.removeItem(TOKEN_KEY); // Remove invalid token
+                updateUI(); // Update UI to show login form
+            }
+        }
+
+        /**
+         * Logs out the user by removing the JWT.
+         */
+        function logout() {
+            localStorage.removeItem(TOKEN_KEY);
+            showMessage(loginMessage, 'Logged out successfully.', true);
+            updateUI(); // Update UI after logout
+        }
+
+        /**
+         * Updates the UI based on whether a JWT is present in localStorage.
+         */
+        function updateUI() {
+            const token = localStorage.getItem(TOKEN_KEY);
+            const username = token ? JSON.parse(atob(token.split('.')[1])).userId : '';
+
+            if (token && username) {
+                loginSection.classList.add('hidden');
+                authenticatedSection.classList.remove('hidden');
+                displayUsername.textContent = username;
+                // Hide protected content display when first authenticated
+                protectedContentDisplay.classList.add('hidden');
+                protectedMessage.classList.add('hidden');
+            } else {
+                loginSection.classList.remove('hidden');
+                authenticatedSection.classList.add('hidden');
+                usernameInput.value = '';
+                passwordInput.value = '';
+                // Ensure messages are cleared/hidden on logout
+                loginMessage.classList.add('hidden');
+                protectedMessage.classList.add('hidden');
+            }
+        }
+
+        // Add event listeners
+        loginButton.addEventListener('click', simulateLogin);
+        accessProtectedButton.addEventListener('click', simulateAccessProtectedContent);
+        logoutButton.addEventListener('click', logout);
+
+        // Initial UI update on page load
+        document.addEventListener('DOMContentLoaded', updateUI);
+    </script>
+</body>
+</html>
