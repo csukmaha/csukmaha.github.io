@@ -1,0 +1,3085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mock Restaurant App Cards</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN for charting -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #2c241e; /* Deep, warm brown background */
+            color: #f5f5dc; /* Creamy off-white text */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better content flow */
+            min-height: 100vh;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 4.5rem; /* Gap between cards remains as last requested */
+            margin-top: 4rem; /* Gap on top remains as last requested */
+            margin-bottom: 6rem; /* Gap on bottom remains as last requested */
+            padding: 3rem; /* Padding for the grid container remains as last requested */
+            background-color: rgba(44, 36, 30, 0.9); /* Background to match container */
+            border-radius: 12px;
+            border: 2px solid #a0522d;
+            width: 100%; /* Ensure grid takes full width of its container */
+            max-width: 1200px; /* Limit max width for large screens */
+        }
+
+        .restaurant-card {
+            background-color: rgba(160, 82, 45, 0.2); /* Light brown translucent */
+            border: 1px solid #8b4513;
+            border-radius: 10px;
+            padding: 1.5rem; /* Reset padding inside cards to original */
+            text-align: center;
+            transition: transform 0.2s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%; /* Ensure cards in a row have same height */
+        }
+
+        .restaurant-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .restaurant-card-icon {
+            font-size: 3rem; /* Reset icon font size to original */
+            margin-bottom: 1rem; /* Reset margin below icon to original */
+            color: #d2b48c; /* Tan icon color */
+        }
+
+        .restaurant-card-title {
+            font-size: 1.5rem; /* Reset title font size to original */
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 0.5rem; /* Reset margin below title to original */
+        }
+
+        .restaurant-card-description {
+            font-size: 0.9rem; /* Reset description font size to original */
+            color: #e0e0d0; /* Lighter creamy for description */
+            flex-grow: 1; /* Allow description to take available space */
+            margin-bottom: 1rem; /* Reset margin below description to original */
+        }
+
+        .restaurant-card-button {
+            background-color: #a0522d;
+            color: #f5f5dc;
+            padding: 0.5rem 1rem; /* Reset button padding to original */
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            border: none; /* Ensure no default button border */
+        }
+
+        .restaurant-card-button:hover {
+            background-color: #8b4513;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Dark semi-transparent overlay */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000; /* Ensure it's on top */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: #2c241e; /* Dark, warm background */
+            border: 2px solid #a0522d; /* Earthy brown border */
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 900px; /* Increased max-width for staff calendar */
+            width: 90%;
+            text-align: center;
+            position: relative;
+            transform: translateY(-20px); /* Start slightly above center */
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            display: flex; /* Use flex for internal layout */
+            flex-direction: column;
+            max-height: 90vh; /* Limit modal height */
+            overflow-y: auto; /* Enable scrolling for modal content */
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0); /* Slide into place */
+            opacity: 1;
+        }
+
+        .modal-close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #f5f5dc;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .modal-close-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #a0522d;
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #d2b48c; /* Tan color for modal title */
+            margin-bottom: 1rem;
+        }
+
+        .modal-description {
+            font-size: 1.1rem;
+            color: #e0e0d0;
+            margin-bottom: 1.5rem;
+        }
+
+        /* CRUD Specific Styles */
+        .crud-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            text-align: left;
+        }
+
+        .crud-input-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap; /* Allow wrapping for responsiveness */
+        }
+
+        .crud-input {
+            flex-grow: 1;
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid #8b4513;
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #f5f5dc;
+            outline: none;
+        }
+
+        .crud-input:focus {
+            border-color: #a0522d;
+        }
+
+        .crud-input:disabled {
+            background-color: rgba(255, 255, 255, 0.02);
+            color: #a0a0a0;
+            cursor: not-allowed;
+        }
+
+        .crud-button {
+            background-color: #8b4513;
+            color: #f5f5dc;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .crud-button:hover {
+            background-color: #a0522d;
+        }
+
+        .crud-button:disabled {
+            background-color: #5a3e2e;
+            color: #b0b0b0;
+            cursor: not-allowed;
+        }
+
+        .crud-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 1rem;
+            max-height: 250px; /* Increased height for scroll */
+            overflow-y: auto; /* Enable scrolling */
+            border: 1px solid #8b4513;
+            border-radius: 8px;
+            background-color: rgba(160, 82, 45, 0.1);
+        }
+
+        .crud-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(139, 69, 19, 0.5);
+        }
+
+        .crud-list-item:last-child {
+            border-bottom: none;
+        }
+
+        .crud-list-item-text {
+            flex-grow: 1;
+            color: #f5f5dc;
+            word-break: break-word; /* Ensure long text wraps */
+        }
+
+        .crud-list-item-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0; /* Prevent actions from shrinking */
+        }
+
+        .crud-list-item-actions .crud-button {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+        }
+
+        .crud-list-item.selected {
+            background-color: rgba(160, 82, 45, 0.4);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .status-select {
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid #8b4513;
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #f5f5dc;
+            outline: none;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .status-select:disabled {
+            background-color: rgba(255, 255, 255, 0.02);
+            color: #a0a0a0;
+            cursor: not-allowed;
+        }
+
+        .status-select option {
+            background-color: #2c241e;
+            color: #f5f5dc;
+        }
+
+        /* Custom Alert/Confirm Modal */
+        .custom-alert-modal, .custom-confirm-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #2c241e;
+            color: #f5f5dc;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.7);
+            z-index: 1002;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            border: 2px solid #a0522d;
+            max-width: 350px;
+            text-align: center;
+        }
+
+        .custom-alert-modal button, .custom-confirm-modal button {
+            background-color: #8b4513;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .custom-alert-modal button:hover, .custom-confirm-modal button:hover {
+            background-color: #a0522d;
+        }
+
+        .custom-confirm-modal .bg-red-700:hover {
+            background-color: #a0522d; /* Keep red hover for delete */
+        }
+
+
+        /* Table Layout Specific Styles */
+        .table-grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Adjust minmax for table size */
+            gap: 1.5rem;
+            padding: 1rem;
+            border: 1px solid #8b4513;
+            border-radius: 8px;
+            background-color: rgba(160, 82, 45, 0.1);
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .table-item {
+            background-color: rgba(160, 82, 45, 0.3);
+            border: 1px solid #a0522d;
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100px; /* Ensure tables have a minimum size */
+        }
+
+        .table-item:hover {
+            background-color: rgba(160, 82, 45, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .table-item.selected-table {
+            border: 2px solid #d2b48c; /* Highlight selected table */
+            background-color: rgba(160, 82, 45, 0.6);
+        }
+
+        .table-item.status-reserved {
+            background-color: rgba(255, 99, 71, 0.4); /* Tomato red for reserved */
+            border-color: #ff6347;
+        }
+
+        .table-item.status-free {
+            background-color: rgba(144, 238, 144, 0.4); /* Light green for free */
+            border-color: #90ee90;
+        }
+
+        .table-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .table-capacity {
+            font-size: 0.9rem;
+            color: #e0e0d0;
+            margin-top: 0.25rem;
+        }
+
+        .table-status {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+            color: #d2b48c; /* Default status color */
+        }
+
+        .table-status.reserved {
+            color: #ff6347; /* Red for reserved */
+        }
+
+        .table-status.free {
+            color: #90ee90; /* Green for free */
+        }
+
+        .table-details-panel {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border: 1px solid #8b4513;
+            border-radius: 8px;
+            background-color: rgba(160, 82, 45, 0.1);
+            text-align: left;
+        }
+
+        .table-details-panel p {
+            margin-bottom: 0.5rem;
+        }
+
+        .table-details-panel .toggle-status-button {
+            background-color: #8b4513;
+            color: #f5f5dc;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            border: none;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+
+        .table-details-panel .toggle-status-button:hover {
+            background-color: #a0522d;
+        }
+
+        .table-details-panel .toggle-status-button:disabled {
+            background-color: #5a3e2e;
+            color: #b0b0b0;
+            cursor: not-allowed;
+        }
+
+
+        /* Staff Roster Calendar Styles */
+        .staff-calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr); /* 7 days a week */
+            gap: 0.5rem;
+            margin-top: 1rem;
+            border: 1px solid #8b4513;
+            border-radius: 8px;
+            background-color: rgba(160, 82, 45, 0.1);
+            padding: 0.75rem;
+        }
+
+        .calendar-day-header {
+            background-color: rgba(139, 69, 19, 0.7); /* Darker brown for headers */
+            color: #f5f5dc;
+            font-weight: bold;
+            padding: 0.5rem;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .calendar-day-cell {
+            background-color: rgba(160, 82, 45, 0.2);
+            border: 1px solid rgba(139, 69, 19, 0.5);
+            border-radius: 4px;
+            padding: 0.75rem;
+            min-height: 100px; /* Ensure cells have some height */
+            text-align: left;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            overflow-y: auto; /* Enable scrolling for long lists of staff */
+        }
+
+        .calendar-day-date {
+            font-weight: bold;
+            color: #d2b48c; /* Tan for dates */
+            margin-bottom: 0.5rem;
+        }
+
+        .calendar-staff-item {
+            cursor: pointer;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+            white-space: nowrap; /* Prevent staff names from wrapping */
+            overflow: hidden;
+            text-overflow: ellipsis; /* Add ellipsis if name is too long */
+        }
+
+        .calendar-staff-item:hover {
+            background-color: rgba(210, 180, 140, 0.2); /* Lighter tan on hover */
+        }
+
+        .calendar-staff-item.selected-staff {
+            background-color: rgba(210, 180, 140, 0.4); /* Highlight selected staff */
+            border: 1px solid #d2b48c;
+        }
+
+        .staff-details-panel {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            border: 1px solid #8b4513;
+            border-radius: 8px;
+            background-color: rgba(160, 82, 45, 0.1);
+            text-align: left;
+        }
+
+        .staff-details-panel h5 {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #d2b48c;
+            margin-bottom: 0.75rem;
+        }
+
+        .staff-details-panel p {
+            margin-bottom: 0.5rem;
+            color: #e0e0d0;
+        }
+
+        .staff-details-panel .status-select {
+            margin-top: 0.5rem;
+            margin-right: 0.5rem;
+        }
+
+        .staff-details-panel .crud-button {
+            margin-top: 1rem;
+            margin-right: 0.5rem;
+        }
+
+        /* Inventory Table Styles */
+        .inventory-table-container {
+            margin-top: 1rem;
+            border: 1px solid #8b4513;
+            border-radius: 8px;
+            overflow-x: auto; /* Enable horizontal scroll for small screens */
+        }
+
+        .inventory-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: rgba(160, 82, 45, 0.1);
+        }
+
+        .inventory-table th, .inventory-table td {
+            padding: 0.75rem 1rem;
+            border: 1px solid rgba(139, 69, 19, 0.5);
+            text-align: left;
+            position: relative; /* For badge positioning */
+        }
+
+        .inventory-table th {
+            background-color: rgba(139, 69, 19, 0.7);
+            color: #f5f5dc;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            position: sticky; /* Make header sticky */
+            top: 0;
+            z-index: 1;
+        }
+
+        .inventory-table td {
+            color: #e0e0d0;
+            font-size: 0.95rem;
+        }
+
+        .inventory-table tr:hover {
+            background-color: rgba(160, 82, 45, 0.2);
+        }
+
+        .inventory-table tr.selected {
+            background-color: rgba(160, 82, 45, 0.4);
+        }
+
+        .status-enough {
+            color: #90ee90; /* Light green */
+            font-weight: bold;
+        }
+
+        .status-low-stock {
+            color: #ffa500; /* Orange */
+            font-weight: bold;
+        }
+
+        .status-out-of-stock {
+            color: #ff6347; /* Tomato red */
+            font-weight: bold;
+        }
+
+        .notify-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: #ff0000; /* Red for notification */
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+        }
+
+        /* Sales Reports Section Styles */
+        .sales-reports-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+            text-align: left;
+        }
+
+        .sales-reports-section .chart-container {
+            position: relative;
+            height: 300px; /* Fixed height for the chart */
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .sales-reports-section .sales-table-container {
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid #8b4513;
+            border-radius: 8px;
+            background-color: rgba(160, 82, 45, 0.1);
+        }
+
+        .sales-reports-section .sales-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .sales-reports-section .sales-table th,
+        .sales-reports-section .sales-table td {
+            padding: 0.75rem 1rem;
+            border: 1px solid rgba(139, 69, 19, 0.5);
+            text-align: left;
+        }
+
+        .sales-reports-section .sales-table th {
+            background-color: rgba(139, 69, 19, 0.7);
+            color: #f5f5dc;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            position: sticky; /* Make header sticky */
+            top: 0;
+            z-index: 1;
+        }
+
+        .sales-reports-section .sales-table td {
+            color: #e0e0d0;
+            font-size: 0.95rem;
+        }
+
+        .sales-reports-section .export-button {
+            background-color: #a0522d;
+            color: #f5f5dc;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            border: none;
+            align-self: flex-end; /* Align to the right */
+        }
+
+        .sales-reports-section .export-button:hover {
+            background-color: #8b4513;
+        }
+
+        /* Reservations Section Specific Styles */
+        .reservations-section .tab-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reservations-section .tab-button {
+            background-color: #8b4513;
+            color: #f5f5dc;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .reservations-section .tab-button.active {
+            background-color: #a0522d;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .reservations-section .tab-button:hover:not(.active) {
+            background-color: #a0522d;
+        }
+
+        .reservations-section .tab-content {
+            border: 1px solid #8b4513;
+            border-radius: 8px;
+            padding: 1.5rem;
+            background-color: rgba(160, 82, 45, 0.1);
+        }
+
+        .reservations-section .crud-input-group label {
+            color: #d2b48c;
+            font-weight: bold;
+            margin-right: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .reservations-section .crud-input-group input[type="date"],
+        .reservations-section .crud-input-group input[type="time"] {
+            flex-grow: 0;
+            width: auto;
+            min-width: 120px;
+        }
+
+        .reservations-section .crud-input-group textarea {
+            width: 100%;
+            min-height: 60px;
+        }
+
+        .reservations-section .crud-list-item {
+            display: flex;
+            flex-direction: column; /* Stack items for better readability */
+            align-items: flex-start;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(139, 69, 19, 0.5);
+            position: relative; /* For potential badges */
+        }
+
+        .reservations-section .crud-list-item-main {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .reservations-section .crud-list-item-details {
+            font-size: 0.9rem;
+            color: #e0e0d0;
+            width: 100%;
+        }
+
+        .reservations-section .crud-list-item-actions {
+            margin-top: 0.5rem;
+            width: 100%;
+            justify-content: flex-end;
+        }
+
+        /* Customer Feedback Section Styles */
+        .feedback-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+            text-align: left;
+        }
+
+        .feedback-section .feedback-form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding: 1rem;
+            border: 1px solid #8b4513;
+            border-radius: 8px;
+            background-color: rgba(160, 82, 45, 0.1);
+        }
+
+        .feedback-section .feedback-form textarea,
+        .feedback-section .feedback-form select {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 6px;
+            border: 1px solid #8b4513;
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #f5f5dc;
+            outline: none;
+        }
+
+        .feedback-section .feedback-form textarea:focus,
+        .feedback-section .feedback-form select:focus {
+            border-color: #a0522d;
+        }
+
+        .feedback-section .feedback-list-container {
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid #8b4513;
+            border-radius: 8px;
+            background-color: rgba(160, 82, 45, 0.1);
+            padding: 1rem;
+        }
+
+        .feedback-section .feedback-list-item {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(139, 69, 19, 0.5);
+        }
+
+        .feedback-section .feedback-list-item:last-child {
+            border-bottom: none;
+        }
+
+        .feedback-section .feedback-list-item .message {
+            color: #f5f5dc;
+            font-size: 0.95rem;
+        }
+
+        .feedback-section .feedback-list-item .details {
+            font-size: 0.8rem;
+            color: #e0e0d0;
+            margin-top: 0.25rem;
+        }
+
+        .feedback-section .sentiment-chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .app-grid {
+                gap: 2.5rem;
+                padding: 1.5rem;
+                margin-top: 2rem;
+                margin-bottom: 3rem;
+            }
+            .restaurant-card {
+                padding: 1rem;
+            }
+            .restaurant-card-icon {
+                font-size: 2.5rem;
+            }
+            .restaurant-card-title {
+                font-size: 1.3rem;
+            }
+            .restaurant-card-description {
+                font-size: 0.85rem;
+            }
+            .restaurant-card-button {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+            .modal-content {
+                padding: 1.5rem;
+            }
+            .modal-title {
+                font-size: 1.5rem;
+            }
+            .modal-description {
+                font-size: 1rem;
+            }
+            .crud-input-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .crud-list-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            .crud-list-item-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+            .table-grid-container {
+                grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+                gap: 1rem;
+            }
+            .table-item {
+                min-height: 80px;
+                padding: 0.75rem;
+            }
+            .table-number {
+                font-size: 1.5rem;
+            }
+            .staff-calendar-grid {
+                grid-template-columns: repeat(2, 1fr); /* 2 columns for smaller screens */
+                gap: 0.75rem;
+            }
+            .calendar-day-cell {
+                min-height: 80px;
+                padding: 0.5rem;
+            }
+            .calendar-day-header {
+                font-size: 0.8rem;
+            }
+            .calendar-day-date {
+                font-size: 0.9rem;
+            }
+            .calendar-staff-item {
+                font-size: 0.75rem;
+            }
+            .staff-details-panel {
+                padding: 1rem;
+            }
+            .staff-details-panel h5 {
+                font-size: 1rem;
+            }
+            .staff-details-panel p {
+                font-size: 0.85rem;
+            }
+            .inventory-table th, .inventory-table td {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.85rem;
+            }
+            .notify-badge {
+                width: 16px;
+                height: 16px;
+                font-size: 0.6rem;
+            }
+            .reservations-section .tab-buttons {
+                flex-direction: column;
+            }
+            .reservations-section .tab-button {
+                width: 100%;
+            }
+            .reservations-section .crud-input-group input[type="date"],
+            .reservations-section .crud-input-group input[type="time"] {
+                width: 100%;
+                min-width: unset;
+            }
+            .reservations-section .crud-list-item-main {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .reservations-section .crud-list-item-actions {
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-grid">
+    <h2 class="text-3xl font-bold text-white mb-8 text-center" style="grid-column: 1 / -1;">Restaurant Overall Management</h2>
+    <div class="restaurant-card">
+        <div class="restaurant-card-icon">🍽️</div>
+        <div class="restaurant-card-title">Menu Management</div>
+        <div class="restaurant-card-description">Update and organize your restaurant’s delicious offerings.</div>
+        <button class="restaurant-card-button" data-app-id="menu">Open</button>
+    </div>
+    <div class="restaurant-card">
+        <div class="restaurant-card-icon">📝</div>
+        <div class="restaurant-card-title">Order Tracking</div>
+        <div class="restaurant-card-description">Manage incoming and active food orders efficiently.</div>
+        <button class="restaurant-card-button" data-app-id="orders">Open</button>
+    </div>
+    <div class="restaurant-card">
+        <div class="restaurant-card-icon">🪑</div>
+        <div class="restaurant-card-title">Table Layout</div>
+        <div class="restaurant-card-description">View and assign tables for your guests.</div>
+        <button class="restaurant-card-button" data-app-id="tables">Open</button>
+    </div>
+    <div class="restaurant-card">
+        <div class="restaurant-card-icon">🧑‍🍳</div>
+        <div class="restaurant-card-title">Staff Roster</div>
+        <div class="restaurant-card-description">Manage employee schedules and roles.</div>
+        <button class="restaurant-card-button" data-app-id="staff">Open</button>
+    </div>
+    <div class="restaurant-card">
+        <div class="restaurant-card-icon">📦</div>
+        <div class="restaurant-card-title">Inventory Control</div>
+        <div class="restaurant-card-description">Keep track of ingredients and supplies.</div>
+        <button class="restaurant-card-button" data-app-id="inventory">Open</button>
+    </div>
+    <div class="restaurant-card">
+        <div class="restaurant-card-icon">🗓️</div>
+        <div class="restaurant-card-title">Reservations</div>
+        <div class="restaurant-card-description">Handle customer bookings and waitlists.</div>
+        <button class="restaurant-card-button" data-app-id="reservations">Open</button>
+    </div>
+    <div class="restaurant-card">
+        <div class="restaurant-card-icon">📊</div>
+        <div class="restaurant-card-title">Sales Reports</div>
+        <div class="restaurant-card-description">Analyze daily, weekly, and monthly sales data.</div>
+        <button class="restaurant-card-button" data-app-id="reports">Open</button>
+    </div>
+    <div class="restaurant-card">
+        <div class="restaurant-card-icon">💬</div>
+        <div class="restaurant-card-title">Customer Feedback</div>
+        <div class="restaurant-card-description">Review customer comments and suggestions.</div>
+        <button class="restaurant-card-button" data-app-id="feedback">Open</button>
+    </div>
+</div>
+
+<!-- Modal Structure -->
+<div id="app-modal-overlay" class="modal-overlay">
+    <div class="modal-content">
+        <button id="modal-close-button" class="modal-close-button">&times;</button>
+        <h3 id="modal-title" class="modal-title"></h3>
+        <p id="modal-description" class="modal-description"></p>
+
+        <!-- Menu Management CRUD Section -->
+        <div id="menu-crud-section" class="crud-section hidden">
+            <h4 class="text-xl font-semibold text-white mb-2">Manage Menu Items</h4>
+            <div class="crud-input-group">
+                <input type="text" id="menu-item-name" class="crud-input" placeholder="Item Name">
+                <input type="number" id="menu-item-price" class="crud-input" placeholder="Price" step="0.01" min="0">
+                <button id="add-menu-item" class="crud-button">Add</button>
+            </div>
+            <div class="crud-input-group">
+                <button id="update-menu-item" class="crud-button flex-grow" disabled>Update Selected</button>
+                <button id="delete-menu-item" class="crud-button bg-red-700 hover:bg-red-800" disabled>Delete Selected</button>
+            </div>
+            <ul id="menu-item-list" class="crud-list">
+                <!-- Menu items will be dynamically loaded here -->
+            </ul>
+        </div>
+
+        <!-- Order Tracking CRUD Section -->
+        <div id="orders-crud-section" class="crud-section hidden">
+            <h4 class="text-xl font-semibold text-white mb-2">Manage Orders</h4>
+            <div class="crud-input-group">
+                <input type="text" id="order-items-input" class="crud-input" placeholder="Items (comma-separated)">
+                <input type="number" id="order-table-input" class="crud-input" placeholder="Table No." min="1">
+                <select id="order-status-select" class="status-select">
+                    <option value="Pending">Pending</option>
+                    <option value="Cooking">Cooking</option>
+                    <option value="Ready">Ready</option>
+                    <option value="Served">Served</option>
+                </select>
+                <button id="add-order-button" class="crud-button">Add Order</button>
+            </div>
+            <div class="crud-input-group">
+                <button id="update-order-button" class="crud-button flex-grow" disabled>Update Selected</button>
+                <button id="delete-order-button" class="crud-button bg-red-700 hover:bg-red-800" disabled>Delete Selected</button>
+            </div>
+            <ul id="order-list" class="crud-list">
+                <!-- Orders will be dynamically loaded here -->
+            </ul>
+        </div>
+
+        <!-- Table Layout Section -->
+        <div id="table-layout-section" class="crud-section hidden">
+            <h4 class="text-xl font-semibold text-white mb-2">Restaurant Tables</h4>
+            <div id="table-grid" class="table-grid-container">
+                <!-- Tables will be dynamically loaded here -->
+            </div>
+            <div id="selected-table-details" class="table-details-panel hidden">
+                <p>Selected Table: <span id="detail-table-number" class="font-bold"></span> (Capacity: <span id="detail-table-capacity"></span>)</p>
+                <p>Status: <span id="detail-table-status" class="font-bold"></span></p>
+                <button id="toggle-table-status" class="toggle-status-button">Toggle Status</button>
+            </div>
+        </div>
+
+        <!-- Staff Roster Section -->
+        <div id="staff-roster-section" class="crud-section hidden">
+            <h4 class="text-xl font-semibold text-white mb-2">Staff Schedule (Next 2 Weeks)</h4>
+            <div class="staff-calendar-grid">
+                <!-- Day headers -->
+                <div class="calendar-day-header">Sun</div>
+                <div class="calendar-day-header">Mon</div>
+                <div class="calendar-day-header">Tue</div>
+                <div class="calendar-day-header">Wed</div>
+                <div class="calendar-day-header">Thu</div>
+                <div class="calendar-day-header">Fri</div>
+                <div class="calendar-day-header">Sat</div>
+                <!-- Calendar cells will be dynamically loaded here -->
+            </div>
+
+            <div id="staff-details-panel" class="staff-details-panel hidden">
+                <h5 id="staff-detail-name"></h5>
+                <p>Role: <span id="staff-detail-role"></span></p>
+                <p>Current Status: <span id="staff-detail-status" class="font-bold"></span>
+                    <select id="staff-detail-status-select" class="status-select ml-2">
+                        <option value="On Duty">On Duty</option>
+                        <option value="Off Duty">Off Duty</option>
+                        <option value="Break">Break</option>
+                    </select>
+                </p>
+                <p>Responsibilities: <span id="staff-detail-responsibilities"></span></p>
+                <p>Schedule: <span id="staff-detail-schedule"></span></p>
+                <div class="crud-input-group mt-4">
+                    <input type="text" id="edit-staff-name" class="crud-input" placeholder="Edit Name">
+                    <input type="text" id="edit-staff-role" class="crud-input" placeholder="Edit Role">
+                </div>
+                <div class="crud-input-group">
+                    <textarea id="edit-staff-responsibilities" class="crud-input" placeholder="Edit Responsibilities" rows="2"></textarea>
+                </div>
+                <div class="crud-input-group">
+                    <textarea id="edit-staff-schedule" class="crud-input" placeholder="Edit Schedule (e.g., Mon, Wed, Fri)" rows="2"></textarea>
+                </div>
+                <div class="crud-input-group mt-2">
+                    <button id="update-selected-staff" class="crud-button flex-grow">Update Staff</button>
+                    <button id="delete-selected-staff" class="crud-button bg-red-700 hover:bg-red-800">Delete Staff</button>
+                </div>
+            </div>
+
+            <h4 class="text-xl font-semibold text-white mt-4 mb-2">Add New Staff</h4>
+            <div class="crud-input-group">
+                <input type="text" id="new-staff-name" class="crud-input" placeholder="New Staff Name">
+                <input type="text" id="new-staff-role" class="crud-input" placeholder="New Role">
+                <select id="new-staff-status-select" class="status-select">
+                    <option value="On Duty">On Duty</option>
+                    <option value="Off Duty">Off Duty</option>
+                    <option value="Break">Break</option>
+                </select>
+                <button id="add-new-staff-button" class="crud-button">Add Staff</button>
+            </div>
+            <div class="crud-input-group">
+                <textarea id="new-staff-responsibilities" class="crud-input" placeholder="New Responsibilities" rows="2"></textarea>
+            </div>
+            <div class="crud-input-group">
+                <textarea id="new-staff-schedule" class="crud-input" placeholder="New Schedule (e.g., Mon, Tue, Weekends)" rows="2"></textarea>
+            </div>
+        </div>
+
+        <!-- Inventory Control Section -->
+        <div id="inventory-crud-section" class="crud-section hidden">
+            <h4 class="text-xl font-semibold text-white mb-2">Manage Inventory</h4>
+            <div class="crud-input-group">
+                <input type="text" id="inventory-item-name" class="crud-input" placeholder="Item Name">
+                <input type="number" id="inventory-item-quantity" class="crud-input" placeholder="Quantity" min="0">
+                <input type="text" id="inventory-item-unit" class="crud-input" placeholder="Unit (e.g., kg, pcs)">
+                <select id="inventory-item-status-select" class="status-select">
+                    <option value="Enough">Enough</option>
+                    <option value="Low Stock">Low Stock</option>
+                    <option value="Out of Stock">Out of Stock</option>
+                </select>
+                <button id="add-inventory-item" class="crud-button">Add Item</button>
+            </div>
+            <div class="crud-input-group">
+                <button id="update-inventory-item" class="crud-button flex-grow" disabled>Update Selected</button>
+                <button id="delete-inventory-item" class="crud-button bg-red-700 hover:bg-red-800" disabled>Delete Selected</button>
+            </div>
+
+            <div class="inventory-table-container">
+                <table class="inventory-table">
+                    <thead>
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Quantity</th>
+                            <th>Unit</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-item-list">
+                        <!-- Inventory items will be dynamically loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Reservations Section -->
+        <div id="reservations-section" class="crud-section hidden">
+            <h4 class="text-xl font-semibold text-white mb-2">Reservations & Waitlist</h4>
+
+            <div class="tab-buttons">
+                <button id="show-reservations-tab" class="tab-button active">Reservations</button>
+                <button id="show-waitlist-tab" class="tab-button">Waitlist</button>
+            </div>
+
+            <div id="reservations-tab-content" class="tab-content">
+                <h5 class="text-lg font-semibold text-white mb-2">Manage Reservations</h5>
+                <div class="crud-input-group">
+                    <input type="text" id="reservation-customer-name" class="crud-input" placeholder="Customer Name">
+                    <input type="number" id="reservation-party-size" class="crud-input" placeholder="Party Size" min="1">
+                    <input type="date" id="reservation-date" class="crud-input">
+                    <input type="time" id="reservation-time" class="crud-input">
+                </div>
+                <div class="crud-input-group">
+                    <input type="number" id="reservation-table-assigned" class="crud-input" placeholder="Assigned Table (optional)" min="1">
+                    <select id="reservation-status-select" class="status-select">
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Seated">Seated</option>
+                        <option value="Cancelled">Cancelled</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+                <div class="crud-input-group">
+                    <textarea id="reservation-order-request" class="crud-input" placeholder="Requested Order List (comma-separated)" rows="2"></textarea>
+                </div>
+                <div class="crud-input-group">
+                    <button id="add-reservation-button" class="crud-button">Add Reservation</button>
+                    <button id="update-reservation-button" class="crud-button" disabled>Update Selected</button>
+                    <button id="delete-reservation-button" class="crud-button bg-red-700 hover:bg-red-800" disabled>Delete Selected</button>
+                </div>
+                <ul id="reservations-list" class="crud-list">
+                    <!-- Reservations will be dynamically loaded here -->
+                </ul>
+            </div>
+
+            <div id="waitlist-tab-content" class="tab-content hidden">
+                <h5 class="text-lg font-semibold text-white mb-2">Manage Waitlist</h5>
+                <div class="crud-input-group">
+                    <input type="text" id="waitlist-customer-name" class="crud-input" placeholder="Customer Name">
+                    <input type="number" id="waitlist-party-size" class="crud-input" placeholder="Party Size" min="1">
+                    <input type="text" id="waitlist-eta" class="crud-input" placeholder="Est. Wait Time (e.g., 15 min)">
+                </div>
+                <div class="crud-input-group">
+                    <textarea id="waitlist-order-request" class="crud-input" placeholder="Requested Order List (comma-separated)" rows="2"></textarea>
+                </div>
+                <div class="crud-input-group">
+                    <button id="add-waitlist-button" class="crud-button">Add to Waitlist</button>
+                    <button id="update-waitlist-button" class="crud-button" disabled>Update Selected</button>
+                    <button id="delete-waitlist-button" class="crud-button bg-red-700 hover:bg-red-800" disabled>Delete Selected</button>
+                </div>
+                <ul id="waitlist-list" class="crud-list">
+                    <!-- Waitlist entries will be dynamically loaded here -->
+                </ul>
+            </div>
+        </div>
+
+        <!-- Sales Reports Section -->
+        <div id="sales-reports-section" class="sales-reports-section hidden">
+            <h4 class="text-xl font-semibold text-white mb-2">Daily Sales Overview</h4>
+            <div class="chart-container">
+                <canvas id="salesChart"></canvas>
+            </div>
+            <h4 class="text-xl font-semibold text-white mb-2">Sales Data Table</h4>
+            <div class="sales-table-container">
+                <table class="sales-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Revenue ($)</th>
+                            <th>Orders</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sales-data-table-body">
+                        <!-- Sales data will be dynamically loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            <button id="export-sales-data" class="export-button">Export to CSV</button>
+        </div>
+
+        <!-- Customer Feedback Section -->
+        <div id="feedback-section" class="feedback-section hidden">
+            <h4 class="text-xl font-semibold text-white mb-2">Submit Feedback</h4>
+            <div class="feedback-form">
+                <textarea id="feedback-message-input" class="crud-input" placeholder="Your feedback message..." rows="3"></textarea>
+                <div class="flex items-center gap-2">
+                    <label for="feedback-rating-select" class="text-white">Rating:</label>
+                    <select id="feedback-rating-select" class="status-select flex-grow">
+                        <option value="5">⭐⭐⭐⭐⭐ (Excellent)</option>
+                        <option value="4">⭐⭐⭐⭐ (Good)</option>
+                        <option value="3">⭐⭐⭐ (Average)</option>
+                        <option value="2">⭐⭐ (Poor)</option>
+                        <option value="1">⭐ (Terrible)</option>
+                    </select>
+                </div>
+                <button id="submit-feedback-button" class="crud-button">Submit Feedback</button>
+            </div>
+
+            <h4 class="text-xl font-semibold text-white mb-2">Recent Feedback Messages</h4>
+            <div class="feedback-list-container">
+                <ul id="feedback-messages-list" class="crud-list">
+                    <!-- Feedback messages will be dynamically loaded here -->
+                </ul>
+            </div>
+
+            <h4 class="text-xl font-semibold text-white mb-2">Feedback Sentiment Analysis</h4>
+            <div class="sentiment-chart-container">
+                <canvas id="sentimentChart"></canvas>
+            </div>
+
+            <button id="export-feedback-messages" class="export-button">Export All Messages to CSV</button>
+        </div>
+
+        <button id="proceed-to-app-button" class="restaurant-button mt-4">Proceed to App</button>
+    </div>
+</div>
+
+<script type="module">
+    // Define app data
+    const apps = [
+        { id: 'menu', icon: '🍽️', title: 'Menu Management', description: 'Update and organize your restaurant’s delicious offerings.' },
+        { id: 'orders', icon: '📝', title: 'Order Tracking', description: 'Manage incoming and active food orders efficiently.' },
+        { id: 'tables', icon: '🪑', title: 'Table Layout', description: 'View and assign tables for your guests.' },
+        { id: 'staff', icon: '🧑‍🍳', title: 'Staff Roster', description: 'Manage employee schedules and roles.' },
+        { id: 'inventory', icon: '📦', title: 'Inventory Control', description: 'Keep track of ingredients and supplies.' },
+        { id: 'reservations', icon: '🗓️', title: 'Reservations', description: 'Handle customer bookings and waitlists.' },
+        { id: 'reports', icon: '📊', title: 'Sales Reports', description: 'Analyze daily, weekly, and monthly sales data.' },
+        { id: 'feedback', icon: '💬', title: 'Customer Feedback', description: 'Review customer comments and suggestions.' },
+    ];
+
+    // In-memory array for menu items (simulating a database)
+    let menuItems = [
+        { id: 'm1', name: 'Classic Burger', price: 12.99 },
+        { id: 'm2', name: 'Caesar Salad', price: 9.50 },
+        { id: 'm3', name: 'Spaghetti Bolognese', price: 15.75 }
+    ];
+    let selectedMenuItemId = null; // To keep track of the menu item being updated/deleted
+
+    // In-memory array for orders (simulating a database)
+    let orders = [
+        { id: 'o1', items: ['Classic Burger', 'Fries'], table: 5, status: 'Cooking' },
+        { id: 'o2', items: ['Caesar Salad', 'Water'], table: 2, status: 'Pending' },
+        { id: 'o3', items: ['Spaghetti Bolognese', 'Garlic Bread', 'Coke'], table: 7, status: 'Ready' }
+    ];
+    let selectedOrderId = null; // To keep track of the order being updated/deleted
+
+    // In-memory array for tables
+    let tables = [
+        { id: 't1', number: 1, capacity: 4, status: 'Free' },
+        { id: 't2', number: 2, capacity: 2, status: 'Reserved' },
+        { id: 't3', number: 3, capacity: 6, status: 'Free' },
+        { id: 't4', number: 4, capacity: 4, status: 'Free' },
+        { id: 't5', number: 5, capacity: 8, status: 'Reserved' },
+        { id: 't6', number: 6, capacity: 2, status: 'Free' },
+        { id: 't7', number: 7, capacity: 4, status: 'Free' },
+        { id: 't8', number: 8, capacity: 6, status: 'Reserved' }
+    ];
+    let selectedTableId = null; // To keep track of the currently selected table
+
+    // In-memory array for staff
+    let staffMembers = [
+        { id: 's1', name: 'Alice Smith', role: 'Chef', status: 'On Duty', responsibilities: 'Manages kitchen operations, trains new chefs.', schedule: 'Mon-Fri 9 AM - 5 PM' },
+        { id: 's2', name: 'Bob Johnson', role: 'Waiter', status: 'On Duty', responsibilities: 'Takes orders, serves food, cleans tables.', schedule: 'Tue-Sat 11 AM - 7 PM' },
+        { id: 's3', name: 'Charlie Brown', role: 'Manager', status: 'Off Duty', responsibilities: 'Oversees daily operations, handles customer complaints.', schedule: 'Mon, Wed, Fri 10 AM - 6 PM' }
+    ];
+    let selectedStaffId = null; // To keep track of the staff member being updated/deleted
+
+    // In-memory array for inventory items
+    let inventoryItems = [
+        { id: 'i1', name: 'Tomatoes', quantity: 50, unit: 'kg', status: 'Enough' },
+        { id: 'i2', name: 'Flour', quantity: 5, unit: 'kg', status: 'Low Stock' },
+        { id: 'i3', name: 'Milk', quantity: 0, unit: 'liters', status: 'Out of Stock' },
+        { id: 'i4', name: 'Chicken Breast', quantity: 20, unit: 'kg', status: 'Enough' }
+    ];
+    let selectedInventoryItemId = null;
+
+    // In-memory array for reservations
+    let reservations = [
+        { id: 'r1', customerName: 'John Doe', date: '2025-07-15', time: '19:00', partySize: 4, tableAssigned: 3, status: 'Confirmed', orderRequest: '2x Classic Burger, 1x Caesar Salad' },
+        { id: 'r2', customerName: 'Jane Smith', date: '2025-07-16', time: '18:30', partySize: 2, tableAssigned: 2, status: 'Confirmed', orderRequest: '' }
+    ];
+    let selectedReservationId = null;
+
+    // In-memory array for waiting list
+    let waitingList = [
+        { id: 'w1', customerName: 'Alice Wonderland', partySize: 3, eta: '20 min', orderRequest: '3x Spaghetti Bolognese' },
+        { id: 'w2', customerName: 'Bob The Builder', partySize: 5, eta: '45 min', orderRequest: '' }
+    ];
+    let selectedWaitlistId = null;
+
+    // In-memory array for sales data
+    const salesData = [
+        { date: '2025-07-07', revenue: 1200, orders: 50 },
+        { date: '2025-07-08', revenue: 1500, orders: 65 },
+        { date: '2025-07-09', revenue: 1350, orders: 58 },
+        { date: '2025-07-10', revenue: 1800, orders: 75 },
+        { date: '2025-07-11', revenue: 1600, orders: 70 },
+        { date: '2025-07-12', revenue: 2100, orders: 90 },
+        { date: '2025-07-13', revenue: 1950, orders: 82 }
+    ];
+    let salesChartInstance = null; // To hold the Chart.js instance
+
+    // In-memory array for customer feedback
+    let feedbackMessages = [
+        { id: 'f1', message: 'Great food and excellent service!', rating: 5, sentiment: 'Positive', date: '2025-07-12' },
+        { id: 'f2', message: 'The burger was a bit cold.', rating: 3, sentiment: 'Negative', date: '2025-07-11' },
+        { id: 'f3', message: 'Nice ambiance, but waited a bit long for the bill.', rating: 4, sentiment: 'Neutral', date: '2025-07-10' },
+        { id: 'f4', message: 'Best pasta I\'ve ever had!', rating: 5, sentiment: 'Positive', date: '2025-07-09' },
+        { id: 'f5', message: 'Good value for money.', rating: 4, sentiment: 'Positive', date: '2025-07-08' },
+        { id: 'f6', message: 'Coffee was too bitter.', rating: 2, sentiment: 'Negative', date: '2025-07-07' },
+        { id: 'f7', message: 'Friendly staff.', rating: 5, sentiment: 'Positive', date: '2025-07-06' },
+        { id: 'f8', message: 'Average experience overall.', rating: 3, sentiment: 'Neutral', date: '2025-07-05' },
+        { id: 'f9', message: 'Delicious dessert!', rating: 5, sentiment: 'Positive', date: '2025-07-04' },
+        { id: 'f10', message: 'Portions were small.', rating: 3, sentiment: 'Negative', date: '2025-07-03' },
+        { id: 'f11', message: 'Will definitely come back!', rating: 5, sentiment: 'Positive', date: '2025-07-02' },
+    ];
+    let sentimentChartInstance = null; // To hold the Chart.js instance for sentiment
+
+    // Get modal elements
+    const appModalOverlay = document.getElementById('app-modal-overlay');
+    const modalCloseButton = document.getElementById('modal-close-button');
+    const modalTitle = document.getElementById('modal-title');
+    const modalDescription = document.getElementById('modal-description');
+    const proceedToAppButton = document.getElementById('proceed-to-app-button');
+    const appGrid = document.querySelector('.app-grid');
+
+    // Menu Management CRUD specific elements
+    const menuCrudSection = document.getElementById('menu-crud-section');
+    const menuItemNameInput = document.getElementById('menu-item-name');
+    const menuItemPriceInput = document.getElementById('menu-item-price');
+    const addMenuItemButton = document.getElementById('add-menu-item');
+    const updateMenuItemButton = document.getElementById('update-menu-item');
+    const deleteMenuItemButton = document.getElementById('delete-menu-item');
+    const menuItemList = document.getElementById('menu-item-list');
+
+    // Order Tracking CRUD specific elements
+    const ordersCrudSection = document.getElementById('orders-crud-section');
+    const orderItemsInput = document.getElementById('order-items-input');
+    const orderTableInput = document.getElementById('order-table-input');
+    const orderStatusSelect = document.getElementById('order-status-select');
+    const addOrderButton = document.getElementById('add-order-button');
+    const updateOrderButton = document.getElementById('update-order-button');
+    const deleteOrderButton = document.getElementById('delete-order-button');
+    const orderList = document.getElementById('order-list');
+
+    // Table Layout specific elements
+    const tableLayoutSection = document.getElementById('table-layout-section');
+    const tableGrid = document.getElementById('table-grid');
+    const selectedTableDetails = document.getElementById('selected-table-details');
+    const detailTableNumber = document.getElementById('detail-table-number');
+    const detailTableCapacity = document.getElementById('detail-table-capacity');
+    const detailTableStatus = document.getElementById('detail-table-status');
+    const toggleTableStatusButton = document.getElementById('toggle-table-status');
+
+    // Staff Roster specific elements
+    const staffRosterSection = document.getElementById('staff-roster-section');
+    const staffCalendarGrid = document.querySelector('.staff-calendar-grid'); // Changed from staffList
+    const staffDetailsPanel = document.getElementById('staff-details-panel');
+
+    // Staff details for editing/viewing
+    const staffDetailName = document.getElementById('staff-detail-name');
+    const staffDetailRole = document.getElementById('staff-detail-role');
+    const staffDetailStatus = document.getElementById('staff-detail-status');
+    const staffDetailStatusSelect = document.getElementById('staff-detail-status-select');
+    const staffDetailResponsibilities = document.getElementById('staff-detail-responsibilities');
+    const staffDetailSchedule = document.getElementById('staff-detail-schedule');
+
+    const editStaffNameInput = document.getElementById('edit-staff-name');
+    const editStaffRoleInput = document.getElementById('edit-staff-role');
+    const editStaffResponsibilitiesInput = document.getElementById('edit-staff-responsibilities');
+    const editStaffScheduleInput = document.getElementById('edit-staff-schedule');
+    const updateSelectedStaffButton = document.getElementById('update-selected-staff');
+    const deleteSelectedStaffButton = document.getElementById('delete-selected-staff');
+
+    // New Staff input fields
+    const newStaffNameInput = document.getElementById('new-staff-name');
+    const newStaffRoleInput = document.getElementById('new-staff-role');
+    const newStaffStatusSelect = document.getElementById('new-staff-status-select');
+    const newStaffResponsibilitiesInput = document.getElementById('new-staff-responsibilities');
+    const newStaffScheduleInput = document.getElementById('new-staff-schedule');
+    const addNewStaffButton = document.getElementById('add-new-staff-button');
+
+    // Inventory Control specific elements
+    const inventoryCrudSection = document.getElementById('inventory-crud-section');
+    const inventoryItemNameInput = document.getElementById('inventory-item-name');
+    const inventoryItemQuantityInput = document.getElementById('inventory-item-quantity');
+    const inventoryItemUnitInput = document.getElementById('inventory-item-unit');
+    const inventoryItemStatusSelect = document.getElementById('inventory-item-status-select');
+    const addInventoryItemButton = document.getElementById('add-inventory-item');
+    const updateInventoryItemButton = document.getElementById('update-inventory-item');
+    const deleteInventoryItemButton = document.getElementById('delete-inventory-item');
+    const inventoryItemList = document.getElementById('inventory-item-list'); // tbody of the table
+
+    // Reservations specific elements
+    const reservationsSection = document.getElementById('reservations-section');
+    const showReservationsTabButton = document.getElementById('show-reservations-tab');
+    const showWaitlistTabButton = document.getElementById('show-waitlist-tab');
+    const reservationsTabContent = document.getElementById('reservations-tab-content');
+    const waitlistTabContent = document.getElementById('waitlist-tab-content');
+
+    // Reservations Form Elements
+    const reservationCustomerNameInput = document.getElementById('reservation-customer-name');
+    const reservationPartySizeInput = document.getElementById('reservation-party-size');
+    const reservationDateInput = document.getElementById('reservation-date');
+    const reservationTimeInput = document.getElementById('reservation-time');
+    const reservationTableAssignedInput = document.getElementById('reservation-table-assigned');
+    const reservationStatusSelect = document.getElementById('reservation-status-select');
+    const reservationOrderRequestInput = document.getElementById('reservation-order-request');
+    const addReservationButton = document.getElementById('add-reservation-button');
+    const updateReservationButton = document.getElementById('update-reservation-button');
+    const deleteReservationButton = document.getElementById('delete-reservation-button');
+    const reservationsList = document.getElementById('reservations-list');
+
+    // Waitlist Form Elements
+    const waitlistCustomerNameInput = document.getElementById('waitlist-customer-name');
+    const waitlistPartySizeInput = document.getElementById('waitlist-party-size');
+    const waitlistEtaInput = document.getElementById('waitlist-eta');
+    const waitlistOrderRequestInput = document.getElementById('waitlist-order-request');
+    const addWaitlistButton = document.getElementById('add-waitlist-button');
+    const updateWaitlistButton = document.getElementById('update-waitlist-button');
+    const deleteWaitlistButton = document.getElementById('delete-waitlist-button');
+    const waitlistList = document.getElementById('waitlist-list');
+
+    // Sales Reports specific elements
+    const salesReportsSection = document.getElementById('sales-reports-section');
+    const salesChartCanvas = document.getElementById('salesChart');
+    const salesDataTableBody = document.getElementById('sales-data-table-body');
+    const exportSalesDataButton = document.getElementById('export-sales-data');
+
+    // Customer Feedback specific elements
+    const feedbackSection = document.getElementById('feedback-section');
+    const feedbackMessageInput = document.getElementById('feedback-message-input');
+    const feedbackRatingSelect = document.getElementById('feedback-rating-select');
+    const submitFeedbackButton = document.getElementById('submit-feedback-button');
+    const feedbackMessagesList = document.getElementById('feedback-messages-list');
+    const sentimentChartCanvas = document.getElementById('sentimentChart');
+    const exportFeedbackMessagesButton = document.getElementById('export-feedback-messages');
+
+
+    /**
+     * Displays a custom alert message.
+     * @param {string} message - The message to display.
+     */
+    function showAlert(message) {
+        const modal = document.createElement('div');
+        modal.className = 'custom-alert-modal';
+        modal.innerHTML = `
+            <p>${message}</p>
+            <button onclick="this.parentNode.remove()">OK</button>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    /**
+     * Displays a custom confirmation message.
+     * @param {string} message - The confirmation message.
+     * @returns {Promise<boolean>} - Resolves true if confirmed, false otherwise.
+     */
+    function showConfirm(message) {
+        return new Promise(resolve => {
+            const confirmModal = document.createElement('div');
+            confirmModal.className = 'custom-confirm-modal';
+            confirmModal.innerHTML = `
+                <p class="text-lg font-semibold">${message}</p>
+                <div style="display: flex; gap: 10px;">
+                    <button id="confirm-yes" class="crud-button bg-red-700 hover:bg-red-800">Yes</button>
+                    <button id="confirm-no" class="crud-button">Cancel</button>
+                </div>
+            `;
+            document.body.appendChild(confirmModal);
+
+            document.getElementById('confirm-yes').onclick = () => {
+                confirmModal.remove();
+                resolve(true);
+            };
+            document.getElementById('confirm-no').onclick = () => {
+                confirmModal.remove();
+                resolve(false);
+            };
+        });
+    }
+
+    /* --- Menu Management CRUD Functions --- */
+
+    /**
+     * Renders the list of menu items in the modal.
+     */
+    function renderMenuItems() {
+        menuItemList.innerHTML = ''; // Clear existing list
+        menuItems.forEach(item => {
+            const listItem = document.createElement('li');
+            listItem.className = 'crud-list-item';
+            listItem.dataset.id = item.id;
+            listItem.innerHTML = `
+                <span class="crud-list-item-text">${item.name} - $${item.price.toFixed(2)}</span>
+                <div class="crud-list-item-actions">
+                    <button class="crud-button edit-item">Edit</button>
+                    <button class="crud-button bg-red-600 delete-item">X</button>
+                </div>
+            `;
+            menuItemList.appendChild(listItem);
+        });
+        updateMenuCrudButtonsState(); // Update button states after rendering
+    }
+
+    /**
+     * Adds a new menu item.
+     */
+    function addMenuItem() {
+        const name = menuItemNameInput.value.trim();
+        const price = parseFloat(menuItemPriceInput.value);
+
+        if (name && !isNaN(price) && price >= 0) {
+            const newItem = { id: 'm' + Date.now(), name, price };
+            menuItems.push(newItem);
+            renderMenuItems();
+            menuItemNameInput.value = '';
+            menuItemPriceInput.value = '';
+        } else {
+            showAlert('Please enter a valid item name and price.');
+        }
+    }
+
+    /**
+     * Updates an existing menu item.
+     */
+    function updateMenuItem() {
+        if (!selectedMenuItemId) return;
+
+        const name = menuItemNameInput.value.trim();
+        const price = parseFloat(menuItemPriceInput.value);
+
+        if (name && !isNaN(price) && price >= 0) {
+            menuItems = menuItems.map(item =>
+                item.id === selectedMenuItemId ? { ...item, name, price } : item
+            );
+            renderMenuItems();
+            resetMenuCrudForm();
+        } else {
+            showAlert('Please enter a valid item name and price for update.');
+        }
+    }
+
+    /**
+     * Deletes a menu item.
+     */
+    async function deleteMenuItem(itemIdToDelete) {
+        const itemToDelete = menuItems.find(item => item.id === itemIdToDelete);
+        if (itemToDelete) {
+            const confirmed = await showConfirm(`Are you sure you want to delete "${itemToDelete.name}"?`);
+            if (confirmed) {
+                menuItems = menuItems.filter(item => item.id !== itemIdToDelete);
+                renderMenuItems();
+                resetMenuCrudForm();
+            }
+        }
+    }
+
+    /**
+     * Resets the Menu CRUD form inputs and selected item.
+     */
+    function resetMenuCrudForm() {
+        menuItemNameInput.value = '';
+        menuItemPriceInput.value = '';
+        selectedMenuItemId = null;
+        updateMenuCrudButtonsState();
+        document.querySelectorAll('#menu-item-list .crud-list-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+    }
+
+    /**
+     * Updates the enabled/disabled state of Menu CRUD buttons.
+     */
+    function updateMenuCrudButtonsState() {
+        const hasSelection = selectedMenuItemId !== null;
+        addMenuItemButton.disabled = hasSelection;
+        updateMenuItemButton.disabled = !hasSelection;
+        deleteMenuItemButton.disabled = !hasSelection;
+    }
+
+    /**
+     * Handles clicks on menu item list (for selecting/editing/deleting).
+     */
+    menuItemList.addEventListener('click', (event) => {
+        const listItem = event.target.closest('.crud-list-item');
+        if (!listItem) return;
+
+        const itemId = listItem.dataset.id;
+
+        if (event.target.classList.contains('edit-item')) {
+            const itemToEdit = menuItems.find(item => item.id === itemId);
+            if (itemToEdit) {
+                menuItemNameInput.value = itemToEdit.name;
+                menuItemPriceInput.value = itemToEdit.price;
+                selectedMenuItemId = itemId;
+                updateMenuCrudButtonsState();
+                document.querySelectorAll('#menu-item-list .crud-list-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                listItem.classList.add('selected');
+            }
+        } else if (event.target.classList.contains('delete-item')) {
+            deleteMenuItem(itemId);
+        }
+    });
+
+    // Add event listeners for Menu CRUD operations
+    addMenuItemButton.addEventListener('click', addMenuItem);
+    updateMenuItemButton.addEventListener('click', updateMenuItem);
+    deleteMenuItemButton.addEventListener('click', () => {
+        if (selectedMenuItemId) {
+            deleteMenuItem(selectedMenuItemId);
+        } else {
+            showAlert("No item selected for deletion.");
+        }
+    });
+
+
+    /* --- Order Tracking CRUD Functions --- */
+
+    /**
+     * Renders the list of orders in the modal.
+     */
+    function renderOrders() {
+        orderList.innerHTML = ''; // Clear existing list
+        orders.forEach(order => {
+            const listItem = document.createElement('li');
+            listItem.className = 'crud-list-item';
+            listItem.dataset.id = order.id;
+            listItem.innerHTML = `
+                <span class="crud-list-item-text">
+                    Table ${order.table}: ${order.items.join(', ')} <br>
+                    Status: <span class="font-bold text-amber-300">${order.status}</span>
+                </span>
+                <div class="crud-list-item-actions">
+                    <button class="crud-button edit-order">Edit</button>
+                    <button class="crud-button bg-red-600 delete-order">X</button>
+                    <select class="status-select change-order-status" data-order-id="${order.id}">
+                        <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                        <option value="Cooking" ${order.status === 'Cooking' ? 'selected' : ''}>Cooking</option>
+                        <option value="Ready" ${order.status === 'Ready' ? 'selected' : ''}>Ready</option>
+                        <option value="Served" ${order.status === 'Served' ? 'selected' : ''}>Served</option>
+                    </select>
+                </div>
+            `;
+            orderList.appendChild(listItem);
+        });
+        updateOrderCrudButtonsState();
+    }
+
+    /**
+     * Adds a new order.
+     */
+    function addOrder() {
+        const items = orderItemsInput.value.split(',').map(item => item.trim()).filter(item => item !== '');
+        const table = parseInt(orderTableInput.value);
+        const status = orderStatusSelect.value;
+
+        if (items.length > 0 && !isNaN(table) && table > 0) {
+            const newOrder = { id: 'o' + Date.now(), items, table, status };
+            orders.push(newOrder);
+            renderOrders();
+            orderItemsInput.value = '';
+            orderTableInput.value = '';
+            orderStatusSelect.value = 'Pending';
+        } else {
+            showAlert('Please enter valid items (comma-separated) and a table number.');
+        }
+    }
+
+    /**
+     * Updates an existing order.
+     */
+    function updateOrder() {
+        if (!selectedOrderId) return;
+
+        const items = orderItemsInput.value.split(',').map(item => item.trim()).filter(item => item !== '');
+        const table = parseInt(orderTableInput.value);
+        const status = orderStatusSelect.value;
+
+        if (items.length > 0 && !isNaN(table) && table > 0) {
+            orders = orders.map(order =>
+                order.id === selectedOrderId ? { ...order, items, table, status } : order
+            );
+            renderOrders();
+            resetOrderCrudForm();
+        } else {
+            showAlert('Please enter valid items (comma-separated) and a table number for update.');
+        }
+    }
+
+    /**
+     * Deletes an order.
+     */
+    async function deleteOrder(orderIdToDelete) {
+        const orderToDelete = orders.find(order => order.id === orderIdToDelete);
+        if (orderToDelete) {
+            const confirmed = await showConfirm(`Are you sure you want to delete the order for Table ${orderToDelete.table}?`);
+            if (confirmed) {
+                orders = orders.filter(order => order.id !== orderIdToDelete);
+                renderOrders();
+                resetOrderCrudForm();
+            }
+        }
+    }
+
+    /**
+     * Resets the Order CRUD form inputs and selected order.
+     */
+    function resetOrderCrudForm() {
+        orderItemsInput.value = '';
+        orderTableInput.value = '';
+        orderStatusSelect.value = 'Pending';
+        selectedOrderId = null;
+        updateOrderCrudButtonsState();
+        document.querySelectorAll('#order-list .crud-list-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+    }
+
+    /**
+     * Updates the enabled/disabled state of Order CRUD buttons.
+     */
+    function updateOrderCrudButtonsState() {
+        const hasSelection = selectedOrderId !== null;
+        addOrderButton.disabled = hasSelection;
+        updateOrderButton.disabled = !hasSelection;
+        deleteOrderButton.disabled = !hasSelection;
+    }
+
+    /**
+     * Handles clicks on order list (for selecting/editing/deleting/changing status).
+     */
+    orderList.addEventListener('click', (event) => {
+        const listItem = event.target.closest('.crud-list-item');
+        if (!listItem) return;
+
+        const orderId = listItem.dataset.id;
+
+        if (event.target.classList.contains('edit-order')) {
+            const orderToEdit = orders.find(order => order.id === orderId);
+            if (orderToEdit) {
+                orderItemsInput.value = orderToEdit.items.join(', ');
+                orderTableInput.value = orderToEdit.table;
+                orderStatusSelect.value = orderToEdit.status;
+                selectedOrderId = orderId;
+                updateOrderCrudButtonsState();
+                document.querySelectorAll('#order-list .crud-list-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                listItem.classList.add('selected');
+            }
+        } else if (event.target.classList.contains('delete-order')) {
+            deleteOrder(orderId);
+        }
+    });
+
+    // Handle status change directly from the select dropdown
+    orderList.addEventListener('change', (event) => {
+        if (event.target.classList.contains('change-order-status')) {
+            const orderId = event.target.dataset.orderId;
+            const newStatus = event.target.value;
+            orders = orders.map(order =>
+                order.id === orderId ? { ...order, status: newStatus } : order
+            );
+            renderOrders(); // Re-render to reflect status change
+        }
+    });
+
+    // Add event listeners for Order CRUD operations
+    addOrderButton.addEventListener('click', addOrder);
+    updateOrderButton.addEventListener('click', updateOrder);
+    deleteOrderButton.addEventListener('click', () => {
+        if (selectedOrderId) {
+            deleteOrder(selectedOrderId);
+        } else {
+            showAlert("No order selected for deletion.");
+        }
+    });
+
+
+    /* --- Table Layout Functions --- */
+
+    /**
+     * Renders the table grid.
+     */
+    function renderTables() {
+        tableGrid.innerHTML = ''; // Clear existing tables
+        tables.forEach(table => {
+            const tableDiv = document.createElement('div');
+            tableDiv.className = `table-item ${table.status === 'Reserved' ? 'status-reserved' : 'status-free'}`;
+            tableDiv.dataset.id = table.id;
+            tableDiv.innerHTML = `
+                <span class="table-number">#${table.number}</span>
+                <span class="table-capacity">(${table.capacity} pax)</span>
+                <span class="table-status ${table.status.toLowerCase()}">${table.status}</span>
+            `;
+            tableGrid.appendChild(tableDiv);
+        });
+        resetTableSelection(); // Reset selection after re-rendering
+    }
+
+    /**
+     * Resets the selected table and hides details panel.
+     */
+    function resetTableSelection() {
+        selectedTableId = null;
+        selectedTableDetails.classList.add('hidden');
+        document.querySelectorAll('.table-item').forEach(item => {
+            item.classList.remove('selected-table');
+        });
+    }
+
+    /**
+     * Handles clicking on a table to view/select it.
+     */
+    tableGrid.addEventListener('click', (event) => {
+        const tableItem = event.target.closest('.table-item');
+        if (!tableItem) return;
+
+        const tableId = tableItem.dataset.id;
+        selectedTableId = tableId;
+
+        // Highlight selected table
+        document.querySelectorAll('.table-item').forEach(item => {
+            item.classList.remove('selected-table');
+        });
+        tableItem.classList.add('selected-table');
+
+        // Display details
+        const selectedTable = tables.find(t => t.id === selectedTableId);
+        if (selectedTable) {
+            detailTableNumber.textContent = selectedTable.number;
+            detailTableCapacity.textContent = selectedTable.capacity;
+            detailTableStatus.textContent = selectedTable.status;
+            detailTableStatus.className = `font-bold table-status ${selectedTable.status.toLowerCase()}`; // Apply status color class
+            selectedTableDetails.classList.remove('hidden');
+            toggleTableStatusButton.textContent = selectedTable.status === 'Free' ? 'Reserve Table' : 'Free Table';
+        }
+    });
+
+    /**
+     * Toggles the status of the selected table.
+     */
+    toggleTableStatusButton.addEventListener('click', () => {
+        if (!selectedTableId) return;
+
+        tables = tables.map(table => {
+            if (table.id === selectedTableId) {
+                const newStatus = table.status === 'Free' ? 'Reserved' : 'Free';
+                return { ...table, status: newStatus };
+            }
+            return table;
+        });
+        renderTables(); // Re-render to reflect status change
+        // Re-select the table to update details panel
+        const updatedTable = tables.find(t => t.id === selectedTableId);
+        if (updatedTable) {
+            detailTableStatus.textContent = updatedTable.status;
+            detailTableStatus.className = `font-bold table-status ${updatedTable.status.toLowerCase()}`;
+            toggleTableStatusButton.textContent = updatedTable.status === 'Free' ? 'Reserve Table' : 'Free Table';
+        }
+    });
+
+
+    /* --- Staff Roster CRUD Functions --- */
+
+    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    /**
+     * Renders the staff calendar grid.
+     */
+    function renderStaffMembers() {
+        // Clear existing calendar cells (keep headers)
+        const existingCells = staffCalendarGrid.querySelectorAll('.calendar-day-cell');
+        existingCells.forEach(cell => cell.remove());
+
+        // Generate 14 days (2 weeks)
+        const today = new Date();
+        for (let i = 0; i < 14; i++) {
+            const currentDate = new Date(today);
+            currentDate.setDate(today.getDate() + i);
+            const dayName = daysOfWeek[currentDate.getDay()];
+            const date = currentDate.getDate();
+            const month = currentDate.toLocaleString('default', { month: 'short' });
+
+            const dayCell = document.createElement('div');
+            dayCell.className = 'calendar-day-cell';
+            dayCell.innerHTML = `
+                <div class="calendar-day-date">${dayName} ${date} ${month}</div>
+            `;
+
+            const staffForThisDay = staffMembers.filter(member =>
+                member.schedule.toLowerCase().includes(dayName.toLowerCase()) ||
+                (dayName === 'Sun' && member.schedule.toLowerCase().includes('weekends')) ||
+                (dayName === 'Sat' && member.schedule.toLowerCase().includes('weekends'))
+            );
+
+            staffForThisDay.forEach(member => {
+                const staffItem = document.createElement('span');
+                staffItem.className = 'calendar-staff-item';
+                staffItem.dataset.id = member.id;
+                staffItem.textContent = `${member.name} (${member.role})`;
+                dayCell.appendChild(staffItem);
+            });
+            staffCalendarGrid.appendChild(dayCell);
+        }
+        resetStaffSelection();
+    }
+
+    /**
+     * Resets staff selection and hides details panel.
+     */
+    function resetStaffSelection() {
+        selectedStaffId = null;
+        staffDetailsPanel.classList.add('hidden');
+        document.querySelectorAll('.calendar-staff-item').forEach(item => {
+            item.classList.remove('selected-staff');
+        });
+        // Clear edit form inputs
+        editStaffNameInput.value = '';
+        editStaffRoleInput.value = '';
+        staffDetailStatusSelect.value = 'On Duty'; // Reset dropdown
+        editStaffResponsibilitiesInput.value = '';
+        editStaffScheduleInput.value = '';
+    }
+
+    /**
+     * Handles clicking on a staff member in the calendar.
+     */
+    staffCalendarGrid.addEventListener('click', (event) => {
+        const staffItem = event.target.closest('.calendar-staff-item');
+        if (!staffItem) return;
+
+        const staffId = staffItem.dataset.id;
+        selectedStaffId = staffId;
+
+        // Highlight selected staff item
+        document.querySelectorAll('.calendar-staff-item').forEach(item => {
+            item.classList.remove('selected-staff');
+        });
+        staffItem.classList.add('selected-staff');
+
+        // Display details in the panel
+        const selectedStaff = staffMembers.find(s => s.id === selectedStaffId);
+        if (selectedStaff) {
+            staffDetailName.textContent = selectedStaff.name;
+            staffDetailRole.textContent = selectedStaff.role;
+            staffDetailStatus.textContent = selectedStaff.status;
+            staffDetailStatusSelect.value = selectedStaff.status; // Set dropdown value
+            staffDetailResponsibilities.textContent = selectedStaff.responsibilities;
+            staffDetailSchedule.textContent = selectedStaff.schedule;
+
+            // Populate edit form
+            editStaffNameInput.value = selectedStaff.name;
+            editStaffRoleInput.value = selectedStaff.role;
+            editStaffResponsibilitiesInput.value = selectedStaff.responsibilities;
+            editStaffScheduleInput.value = selectedStaff.schedule;
+
+            staffDetailsPanel.classList.remove('hidden');
+        }
+    });
+
+    /**
+     * Handles changing staff status from the dropdown in the details panel.
+     */
+    staffDetailStatusSelect.addEventListener('change', () => {
+        if (!selectedStaffId) return;
+        const newStatus = staffDetailStatusSelect.value;
+        staffMembers = staffMembers.map(member =>
+            member.id === selectedStaffId ? { ...member, status: newStatus } : member
+        );
+        staffDetailStatus.textContent = newStatus; // Update displayed status
+        renderStaffMembers(); // Re-render calendar to reflect status
+    });
+
+
+    /**
+     * Adds a new staff member.
+     */
+    function addNewStaffMember() {
+        const name = newStaffNameInput.value.trim();
+        const role = newStaffRoleInput.value.trim();
+        const status = newStaffStatusSelect.value;
+        const responsibilities = newStaffResponsibilitiesInput.value.trim();
+        const schedule = newStaffScheduleInput.value.trim();
+
+        if (name && role) {
+            const newStaff = { id: 's' + Date.now(), name, role, status, responsibilities, schedule };
+            staffMembers.push(newStaff);
+            renderStaffMembers();
+            // Clear new staff inputs
+            newStaffNameInput.value = '';
+            newStaffRoleInput.value = '';
+            newStaffStatusSelect.value = 'On Duty';
+            newStaffResponsibilitiesInput.value = '';
+            newStaffScheduleInput.value = '';
+        } else {
+            showAlert('Please enter new staff name and role.');
+        }
+    }
+
+    /**
+     * Updates the selected staff member's details.
+     */
+    function updateSelectedStaffMember() {
+        if (!selectedStaffId) {
+            showAlert("No staff member selected to update.");
+            return;
+        }
+
+        const name = editStaffNameInput.value.trim();
+        const role = editStaffRoleInput.value.trim();
+        const responsibilities = editStaffResponsibilitiesInput.value.trim();
+        const schedule = editStaffScheduleInput.value.trim();
+        const status = staffDetailStatusSelect.value; // Get status from the details panel dropdown
+
+        if (name && role) {
+            staffMembers = staffMembers.map(member =>
+                member.id === selectedStaffId ? { ...member, name, role, responsibilities, schedule, status } : member
+            );
+            renderStaffMembers(); // Re-render calendar
+            resetStaffSelection(); // Clear selection and details
+        } else {
+            showAlert('Please enter valid staff name and role for update.');
+        }
+    }
+
+    /**
+     * Deletes the selected staff member.
+     */
+    async function deleteSelectedStaffMember() {
+        if (!selectedStaffId) {
+            showAlert("No staff member selected for deletion.");
+            return;
+        }
+
+        const staffToDelete = staffMembers.find(member => member.id === selectedStaffId);
+        if (staffToDelete) {
+            const confirmed = await showConfirm(`Are you sure you want to delete "${staffToDelete.name}"?`);
+            if (confirmed) {
+                staffMembers = staffMembers.filter(member => member.id !== selectedStaffId);
+                renderStaffMembers(); // Re-render calendar
+                resetStaffSelection(); // Clear selection and details
+            }
+        }
+    }
+
+    // Add event listeners for Staff CRUD operations
+    addNewStaffButton.addEventListener('click', addNewStaffMember);
+    updateSelectedStaffButton.addEventListener('click', updateSelectedStaffMember);
+    deleteSelectedStaffButton.addEventListener('click', deleteSelectedStaffMember);
+
+
+    /* --- Inventory Control CRUD Functions --- */
+
+    /**
+     * Renders the inventory items in a table.
+     */
+    function renderInventoryItems() {
+        inventoryItemList.innerHTML = ''; // Clear existing table rows
+        inventoryItems.forEach(item => {
+            const tableRow = document.createElement('tr');
+            tableRow.dataset.id = item.id;
+
+            let statusClass = '';
+            let notifyBadge = '';
+            if (item.status === 'Enough') {
+                statusClass = 'status-enough';
+            } else if (item.status === 'Low Stock') {
+                statusClass = 'status-low-stock';
+                notifyBadge = '<span class="notify-badge">!</span>';
+            } else if (item.status === 'Out of Stock') {
+                statusClass = 'status-out-of-stock';
+                notifyBadge = '<span class="notify-badge">X</span>';
+            }
+
+            tableRow.innerHTML = `
+                <td>${item.name}</td>
+                <td>${item.quantity}</td>
+                <td>${item.unit}</td>
+                <td class="${statusClass}">${item.status}${notifyBadge}</td>
+                <td>
+                    <button class="crud-button edit-inventory-item">Edit</button>
+                    <button class="crud-button bg-red-600 delete-inventory-item">Delete</button>
+                </td>
+            `;
+            inventoryItemList.appendChild(tableRow);
+        });
+        updateInventoryCrudButtonsState();
+    }
+
+    /**
+     * Adds a new inventory item.
+     */
+    function addInventoryItem() {
+        const name = inventoryItemNameInput.value.trim();
+        const quantity = parseInt(inventoryItemQuantityInput.value);
+        const unit = inventoryItemUnitInput.value.trim();
+        const status = inventoryItemStatusSelect.value;
+
+        if (name && !isNaN(quantity) && quantity >= 0 && unit) {
+            const newItem = { id: 'i' + Date.now(), name, quantity, unit, status };
+            inventoryItems.push(newItem);
+            renderInventoryItems();
+            resetInventoryCrudForm();
+        } else {
+            showAlert('Please enter valid item name, quantity, and unit.');
+        }
+    }
+
+    /**
+     * Updates an existing inventory item.
+     */
+    function updateInventoryItem() {
+        if (!selectedInventoryItemId) return;
+
+        const name = inventoryItemNameInput.value.trim();
+        const quantity = parseInt(inventoryItemQuantityInput.value);
+        const unit = inventoryItemUnitInput.value.trim();
+        const status = inventoryItemStatusSelect.value;
+
+        if (name && !isNaN(quantity) && quantity >= 0 && unit) {
+            inventoryItems = inventoryItems.map(item =>
+                item.id === selectedInventoryItemId ? { ...item, name, quantity, unit, status } : item
+            );
+            renderInventoryItems();
+            resetInventoryCrudForm();
+        } else {
+            showAlert('Please enter valid item name, quantity, and unit for update.');
+        }
+    }
+
+    /**
+     * Deletes an inventory item.
+     */
+    async function deleteInventoryItem(itemIdToDelete) {
+        const itemToDelete = inventoryItems.find(item => item.id === itemIdToDelete);
+        if (itemToDelete) {
+            const confirmed = await showConfirm(`Are you sure you want to delete "${itemToDelete.name}" from inventory?`);
+            if (confirmed) {
+                inventoryItems = inventoryItems.filter(item => item.id !== itemIdToDelete);
+                renderInventoryItems();
+                resetInventoryCrudForm();
+            }
+        }
+    }
+
+    /**
+     * Resets the Inventory CRUD form inputs and selected item.
+     */
+    function resetInventoryCrudForm() {
+        inventoryItemNameInput.value = '';
+        inventoryItemQuantityInput.value = '';
+        inventoryItemUnitInput.value = '';
+        inventoryItemStatusSelect.value = 'Enough';
+        selectedInventoryItemId = null;
+        updateInventoryCrudButtonsState();
+        document.querySelectorAll('#inventory-item-list tr').forEach(row => {
+            row.classList.remove('selected');
+        });
+    }
+
+    /**
+     * Updates the enabled/disabled state of Inventory CRUD buttons.
+     */
+    function updateInventoryCrudButtonsState() {
+        const hasSelection = selectedInventoryItemId !== null;
+        addInventoryItemButton.disabled = hasSelection;
+        updateInventoryItemButton.disabled = !hasSelection;
+        deleteInventoryItemButton.disabled = !hasSelection;
+    }
+
+    /**
+     * Handles clicks on inventory table (for selecting/editing/deleting).
+     */
+    inventoryItemList.addEventListener('click', (event) => {
+        const tableRow = event.target.closest('tr');
+        if (!tableRow) return;
+
+        const itemId = tableRow.dataset.id;
+
+        if (event.target.classList.contains('edit-inventory-item')) {
+            const itemToEdit = inventoryItems.find(item => item.id === itemId);
+            if (itemToEdit) {
+                inventoryItemNameInput.value = itemToEdit.name;
+                inventoryItemQuantityInput.value = itemToEdit.quantity;
+                inventoryItemUnitInput.value = itemToEdit.unit;
+                inventoryItemStatusSelect.value = itemToEdit.status;
+                selectedInventoryItemId = itemId;
+                updateInventoryCrudButtonsState();
+                document.querySelectorAll('#inventory-item-list tr').forEach(row => {
+                    row.classList.remove('selected');
+                });
+                tableRow.classList.add('selected');
+            }
+        } else if (event.target.classList.contains('delete-inventory-item')) {
+            deleteInventoryItem(itemId);
+        }
+    });
+
+    // Add event listeners for Inventory CRUD operations
+    addInventoryItemButton.addEventListener('click', addInventoryItem);
+    updateInventoryItemButton.addEventListener('click', updateInventoryItem);
+    deleteInventoryItemButton.addEventListener('click', () => {
+        if (selectedInventoryItemId) {
+            deleteInventoryItem(selectedInventoryItemId);
+        } else {
+            showAlert("No inventory item selected for deletion.");
+        }
+    });
+
+
+    /* --- Reservations CRUD Functions --- */
+
+    /**
+     * Renders the list of reservations.
+     */
+    function renderReservations() {
+        reservationsList.innerHTML = '';
+        reservations.forEach(res => {
+            const listItem = document.createElement('li');
+            listItem.className = 'crud-list-item';
+            listItem.dataset.id = res.id;
+            const orderText = res.orderRequest ? `<br>Order: ${res.orderRequest}` : '';
+            listItem.innerHTML = `
+                <div class="crud-list-item-main">
+                    <span class="crud-list-item-text">
+                        <strong>${res.customerName}</strong> (${res.partySize} pax)
+                    </span>
+                    <span class="text-sm text-gray-400">${res.date} at ${res.time}</span>
+                </div>
+                <div class="crud-list-item-details">
+                    Table: ${res.tableAssigned || 'N/A'} | Status: <span class="font-bold text-amber-300">${res.status}</span>${orderText}
+                </div>
+                <div class="crud-list-item-actions">
+                    <button class="crud-button edit-reservation">Edit</button>
+                    <button class="crud-button bg-red-600 delete-reservation">Delete</button>
+                    <select class="status-select change-reservation-status" data-reservation-id="${res.id}">
+                        <option value="Confirmed" ${res.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
+                        <option value="Seated" ${res.status === 'Seated' ? 'selected' : ''}>Seated</option>
+                        <option value="Cancelled" ${res.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                        <option value="Completed" ${res.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                    </select>
+                </div>
+            `;
+            reservationsList.appendChild(listItem);
+        });
+        updateReservationCrudButtonsState();
+    }
+
+    /**
+     * Adds a new reservation.
+     */
+    function addReservation() {
+        const customerName = reservationCustomerNameInput.value.trim();
+        const partySize = parseInt(reservationPartySizeInput.value);
+        const date = reservationDateInput.value;
+        const time = reservationTimeInput.value;
+        const tableAssigned = reservationTableAssignedInput.value ? parseInt(reservationTableAssignedInput.value) : null;
+        const status = reservationStatusSelect.value;
+        const orderRequest = reservationOrderRequestInput.value.trim();
+
+        if (customerName && !isNaN(partySize) && partySize > 0 && date && time) {
+            const newReservation = {
+                id: 'r' + Date.now(),
+                customerName,
+                date,
+                time,
+                partySize,
+                tableAssigned,
+                status,
+                orderRequest
+            };
+            reservations.push(newReservation);
+            renderReservations();
+            resetReservationForm();
+        } else {
+            showAlert('Please fill in all required reservation fields (Customer Name, Party Size, Date, Time).');
+        }
+    }
+
+    /**
+     * Updates an existing reservation.
+     */
+    function updateReservation() {
+        if (!selectedReservationId) return;
+
+        const customerName = reservationCustomerNameInput.value.trim();
+        const partySize = parseInt(reservationPartySizeInput.value);
+        const date = reservationDateInput.value;
+        const time = reservationTimeInput.value;
+        const tableAssigned = reservationTableAssignedInput.value ? parseInt(reservationTableAssignedInput.value) : null;
+        const status = reservationStatusSelect.value;
+        const orderRequest = reservationOrderRequestInput.value.trim();
+
+        if (customerName && !isNaN(partySize) && partySize > 0 && date && time) {
+            reservations = reservations.map(res =>
+                res.id === selectedReservationId ? { ...res, customerName, date, time, partySize, tableAssigned, status, orderRequest } : res
+            );
+            renderReservations();
+            resetReservationForm();
+        } else {
+            showAlert('Please fill in all required reservation fields for update.');
+        }
+    }
+
+    /**
+     * Deletes a reservation.
+     */
+    async function deleteReservation(reservationIdToDelete) {
+        const resToDelete = reservations.find(res => res.id === reservationIdToDelete);
+        if (resToDelete) {
+            const confirmed = await showConfirm(`Are you sure you want to delete the reservation for "${resToDelete.customerName}"?`);
+            if (confirmed) {
+                reservations = reservations.filter(res => res.id !== reservationIdToDelete);
+                renderReservations();
+                resetReservationForm();
+            }
+        }
+    }
+
+    /**
+     * Resets the reservation form inputs and selected item.
+     */
+    function resetReservationForm() {
+        reservationCustomerNameInput.value = '';
+        reservationPartySizeInput.value = '';
+        reservationDateInput.value = '';
+        reservationTimeInput.value = '';
+        reservationTableAssignedInput.value = '';
+        reservationStatusSelect.value = 'Confirmed';
+        reservationOrderRequestInput.value = '';
+        selectedReservationId = null;
+        updateReservationCrudButtonsState();
+        document.querySelectorAll('#reservations-list .crud-list-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+    }
+
+    /**
+     * Updates the enabled/disabled state of reservation CRUD buttons.
+     */
+    function updateReservationCrudButtonsState() {
+        const hasSelection = selectedReservationId !== null;
+        addReservationButton.disabled = hasSelection;
+        updateReservationButton.disabled = !hasSelection;
+        deleteReservationButton.disabled = !hasSelection;
+    }
+
+    reservationsList.addEventListener('click', (event) => {
+        const listItem = event.target.closest('.crud-list-item');
+        if (!listItem) return;
+
+        const resId = listItem.dataset.id;
+
+        if (event.target.classList.contains('edit-reservation')) {
+            const resToEdit = reservations.find(res => res.id === resId);
+            if (resToEdit) {
+                reservationCustomerNameInput.value = resToEdit.customerName;
+                reservationPartySizeInput.value = resToEdit.partySize;
+                reservationDateInput.value = resToEdit.date;
+                reservationTimeInput.value = resToEdit.time;
+                reservationTableAssignedInput.value = resToEdit.tableAssigned || '';
+                reservationStatusSelect.value = resToEdit.status;
+                reservationOrderRequestInput.value = resToEdit.orderRequest;
+                selectedReservationId = resId;
+                updateReservationCrudButtonsState();
+                document.querySelectorAll('#reservations-list .crud-list-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                listItem.classList.add('selected');
+            }
+        } else if (event.target.classList.contains('delete-reservation')) {
+            deleteReservation(resId);
+        }
+    });
+
+    reservationsList.addEventListener('change', (event) => {
+        if (event.target.classList.contains('change-reservation-status')) {
+            const resId = event.target.dataset.reservationId;
+            const newStatus = event.target.value;
+            reservations = reservations.map(res =>
+                res.id === resId ? { ...res, status: newStatus } : res
+            );
+            renderReservations();
+        }
+    });
+
+    addReservationButton.addEventListener('click', addReservation);
+    updateReservationButton.addEventListener('click', updateReservation);
+    deleteReservationButton.addEventListener('click', () => {
+        if (selectedReservationId) {
+            deleteReservation(selectedReservationId);
+        } else {
+            showAlert("No reservation selected for deletion.");
+        }
+    });
+
+
+    /* --- Waitlist CRUD Functions --- */
+
+    /**
+     * Renders the list of waitlist entries.
+     */
+    function renderWaitlist() {
+        waitlistList.innerHTML = '';
+        waitingList.forEach(entry => {
+            const listItem = document.createElement('li');
+            listItem.className = 'crud-list-item';
+            listItem.dataset.id = entry.id;
+            const orderText = entry.orderRequest ? `<br>Order: ${entry.orderRequest}` : '';
+            listItem.innerHTML = `
+                <div class="crud-list-item-main">
+                    <span class="crud-list-item-text">
+                        <strong>${entry.customerName}</strong> (${entry.partySize} pax)
+                    </span>
+                    <span class="text-sm text-gray-400">ETA: ${entry.eta}</span>
+                </div>
+                <div class="crud-list-item-details">
+                    ${orderText}
+                </div>
+                <div class="crud-list-item-actions">
+                    <button class="crud-button edit-waitlist">Edit</button>
+                    <button class="crud-button bg-green-600 seat-waitlist">Seat</button>
+                    <button class="crud-button bg-red-600 delete-waitlist">Delete</button>
+                </div>
+            `;
+            waitlistList.appendChild(listItem);
+        });
+        updateWaitlistCrudButtonsState();
+    }
+
+    /**
+     * Adds a new waitlist entry.
+     */
+    function addWaitlistEntry() {
+        const customerName = waitlistCustomerNameInput.value.trim();
+        const partySize = parseInt(waitlistPartySizeInput.value);
+        const eta = waitlistEtaInput.value.trim();
+        const orderRequest = waitlistOrderRequestInput.value.trim();
+
+        if (customerName && !isNaN(partySize) && partySize > 0 && eta) {
+            const newEntry = {
+                id: 'w' + Date.now(),
+                customerName,
+                partySize,
+                eta,
+                orderRequest
+            };
+            waitingList.push(newEntry);
+            renderWaitlist();
+            resetWaitlistForm();
+        } else {
+            showAlert('Please fill in all required waitlist fields (Customer Name, Party Size, Est. Wait Time).');
+        }
+    }
+
+    /**
+     * Updates an existing waitlist entry.
+     */
+    function updateWaitlistEntry() {
+        if (!selectedWaitlistId) return;
+
+        const customerName = waitlistCustomerNameInput.value.trim();
+        const partySize = parseInt(waitlistPartySizeInput.value);
+        const eta = waitlistEtaInput.value.trim();
+        const orderRequest = waitlistOrderRequestInput.value.trim();
+
+        if (customerName && !isNaN(partySize) && partySize > 0 && eta) {
+            waitingList = waitingList.map(entry =>
+                entry.id === selectedWaitlistId ? { ...entry, customerName, partySize, eta, orderRequest } : entry
+            );
+            renderWaitlist();
+            resetWaitlistForm();
+        } else {
+            showAlert('Please fill in all required waitlist fields for update.');
+        }
+    }
+
+    /**
+     * Deletes a waitlist entry.
+     */
+    async function deleteWaitlistEntry(waitlistIdToDelete) {
+        const entryToDelete = waitingList.find(entry => entry.id === waitlistIdToDelete);
+        if (entryToDelete) {
+            const confirmed = await showConfirm(`Are you sure you want to remove "${entryToDelete.customerName}" from the waitlist?`);
+            if (confirmed) {
+                waitingList = waitingList.filter(entry => entry.id !== waitlistIdToDelete);
+                renderWaitlist();
+                resetWaitlistForm();
+            }
+        }
+    }
+
+    /**
+     * Resets the waitlist form inputs and selected item.
+     */
+    function resetWaitlistForm() {
+        waitlistCustomerNameInput.value = '';
+        waitlistPartySizeInput.value = '';
+        waitlistEtaInput.value = '';
+        waitlistOrderRequestInput.value = '';
+        selectedWaitlistId = null;
+        updateWaitlistCrudButtonsState();
+        document.querySelectorAll('#waitlist-list .crud-list-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+    }
+
+    /**
+     * Updates the enabled/disabled state of waitlist CRUD buttons.
+     */
+    function updateWaitlistCrudButtonsState() {
+        const hasSelection = selectedWaitlistId !== null;
+        addWaitlistButton.disabled = hasSelection;
+        updateWaitlistButton.disabled = !hasSelection;
+        deleteWaitlistButton.disabled = !hasSelection;
+    }
+
+    waitlistList.addEventListener('click', (event) => {
+        const listItem = event.target.closest('.crud-list-item');
+        if (!listItem) return;
+
+        const entryId = listItem.dataset.id;
+
+        if (event.target.classList.contains('edit-waitlist')) {
+            const entryToEdit = waitingList.find(entry => entry.id === entryId);
+            if (entryToEdit) {
+                waitlistCustomerNameInput.value = entryToEdit.customerName;
+                waitlistPartySizeInput.value = entryToEdit.partySize;
+                waitlistEtaInput.value = entryToEdit.eta;
+                waitlistOrderRequestInput.value = entryToEdit.orderRequest;
+                selectedWaitlistId = entryId;
+                updateWaitlistCrudButtonsState();
+                document.querySelectorAll('#waitlist-list .crud-list-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                listItem.classList.add('selected');
+            }
+        } else if (event.target.classList.contains('delete-waitlist')) {
+            deleteWaitlistEntry(entryId);
+        } else if (event.target.classList.contains('seat-waitlist')) {
+            const entryToSeat = waitingList.find(entry => entry.id === entryId);
+            if (entryToSeat) {
+                showAlert(`"${entryToSeat.customerName}" (Party of ${entryToSeat.partySize}) has been seated!`);
+                deleteWaitlistEntry(entryId); // Remove from waitlist after seating
+            }
+        }
+    });
+
+    addWaitlistButton.addEventListener('click', addWaitlistEntry);
+    updateWaitlistButton.addEventListener('click', updateWaitlistEntry);
+    deleteWaitlistButton.addEventListener('click', () => {
+        if (selectedWaitlistId) {
+            deleteWaitlistEntry(selectedWaitlistId);
+        } else {
+            showAlert("No waitlist entry selected for deletion.");
+        }
+    });
+
+
+    /* --- Tab Switching for Reservations Section --- */
+    showReservationsTabButton.addEventListener('click', () => {
+        reservationsTabContent.classList.remove('hidden');
+        waitlistTabContent.classList.add('hidden');
+        showReservationsTabButton.classList.add('active');
+        showWaitlistTabButton.classList.remove('active');
+        renderReservations(); // Re-render reservations when tab is active
+        resetReservationForm(); // Clear form when switching tabs
+    });
+
+    showWaitlistTabButton.addEventListener('click', () => {
+        waitlistTabContent.classList.remove('hidden');
+        reservationsTabContent.classList.add('hidden');
+        showWaitlistTabButton.classList.add('active');
+        showReservationsTabButton.classList.remove('active');
+        renderWaitlist(); // Re-render waitlist when tab is active
+        resetWaitlistForm(); // Clear form when switching tabs
+    });
+
+
+    /* --- Sales Reports Functions --- */
+
+    /**
+     * Renders the sales chart using Chart.js.
+     */
+    function renderSalesChart() {
+        if (salesChartInstance) {
+            salesChartInstance.destroy(); // Destroy previous chart instance if it exists
+        }
+
+        const labels = salesData.map(d => d.date);
+        const revenues = salesData.map(d => d.revenue);
+        const orders = salesData.map(d => d.orders);
+
+        salesChartInstance = new Chart(salesChartCanvas, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Revenue ($)',
+                        data: revenues,
+                        borderColor: '#d2b48c', // Tan color
+                        backgroundColor: 'rgba(210, 180, 140, 0.2)', // Light tan with transparency
+                        tension: 0.3, // Smooth curves
+                        fill: true,
+                        pointBackgroundColor: '#d2b48c',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#d2b48c',
+                    },
+                    {
+                        label: 'Orders',
+                        data: orders,
+                        borderColor: '#8b4513', // Saddle brown
+                        backgroundColor: 'rgba(139, 69, 19, 0.2)', // Darker brown with transparency
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: '#8b4513',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#8b4513',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false, // Allow chart to fill container
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Daily Revenue and Orders',
+                        color: '#f5f5dc',
+                        font: {
+                            size: 18
+                        }
+                    },
+                    legend: {
+                        labels: {
+                            color: '#e0e0d0' // Legend text color
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)' // X-axis grid lines
+                        },
+                        ticks: {
+                            color: '#e0e0d0' // X-axis tick labels
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)' // Y-axis grid lines
+                        },
+                        ticks: {
+                            color: '#e0e0d0' // Y-axis tick labels
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Renders the sales data in a table.
+     */
+    function renderSalesTable() {
+        salesDataTableBody.innerHTML = '';
+        salesData.forEach(data => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${data.date}</td>
+                <td>$${data.revenue.toFixed(2)}</td>
+                <td>${data.orders}</td>
+            `;
+            salesDataTableBody.appendChild(row);
+        });
+    }
+
+    /**
+     * Exports sales data to a CSV file.
+     */
+    function exportSalesDataToCSV() {
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Date,Revenue ($),Orders\n"; // CSV Header
+
+        salesData.forEach(row => {
+            csvContent += `${row.date},${row.revenue.toFixed(2)},${row.orders}\n`;
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "sales_report.csv");
+        document.body.appendChild(link); // Required for Firefox
+        link.click();
+        document.body.removeChild(link); // Clean up
+        showAlert('Sales data exported to sales_report.csv!');
+    }
+
+    // Add event listener for export button
+    exportSalesDataButton.addEventListener('click', exportSalesDataToCSV);
+
+
+    /* --- Customer Feedback Functions --- */
+
+    /**
+     * Renders the last 10 feedback messages.
+     */
+    function renderFeedbackMessages() {
+        feedbackMessagesList.innerHTML = '';
+        // Sort by date descending and take the last 10
+        const recentMessages = feedbackMessages.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10);
+
+        if (recentMessages.length === 0) {
+            const noFeedbackItem = document.createElement('li');
+            noFeedbackItem.className = 'crud-list-item-text text-center py-4';
+            noFeedbackItem.textContent = 'No feedback messages yet.';
+            feedbackMessagesList.appendChild(noFeedbackItem);
+            return;
+        }
+
+        recentMessages.forEach(feedback => {
+            const listItem = document.createElement('li');
+            listItem.className = 'feedback-list-item';
+            listItem.innerHTML = `
+                <p class="message">"${feedback.message}"</p>
+                <p class="details">Rating: ${'⭐'.repeat(feedback.rating)} | Sentiment: <span class="font-bold">${feedback.sentiment}</span> | Date: ${feedback.date}</p>
+            `;
+            feedbackMessagesList.appendChild(listItem);
+        });
+    }
+
+    /**
+     * Renders the sentiment chart.
+     */
+    function renderSentimentChart() {
+        if (sentimentChartInstance) {
+            sentimentChartInstance.destroy();
+        }
+
+        const sentimentCounts = {
+            'Positive': 0,
+            'Neutral': 0,
+            'Negative': 0
+        };
+
+        feedbackMessages.forEach(feedback => {
+            if (sentimentCounts.hasOwnProperty(feedback.sentiment)) {
+                sentimentCounts[feedback.sentiment]++;
+            }
+        });
+
+        const data = Object.values(sentimentCounts);
+        const labels = Object.keys(sentimentCounts);
+        const backgroundColors = ['#90ee90', '#d2b48c', '#ff6347']; // Green, Tan, Red
+
+        sentimentChartInstance = new Chart(sentimentChartCanvas, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Number of Messages',
+                    data: data,
+                    backgroundColor: backgroundColors,
+                    borderColor: backgroundColors.map(color => color.replace('0.2', '1')), // Solid border
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Feedback Sentiment Distribution',
+                        color: '#f5f5dc',
+                        font: {
+                            size: 18
+                        }
+                    },
+                    legend: {
+                        display: false // No need for legend in a simple bar chart
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#e0e0d0'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#e0e0d0',
+                            precision: 0 // Ensure integer ticks
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Adds new feedback message.
+     */
+    function addFeedbackMessage() {
+        const message = feedbackMessageInput.value.trim();
+        const rating = parseInt(feedbackRatingSelect.value);
+
+        if (message) {
+            // Simple sentiment assignment based on rating for demonstration
+            let sentiment = 'Neutral';
+            if (rating >= 4) {
+                sentiment = 'Positive';
+            } else if (rating <= 2) {
+                sentiment = 'Negative';
+            }
+
+            const newFeedback = {
+                id: 'f' + Date.now(),
+                message,
+                rating,
+                sentiment,
+                date: new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+            };
+            feedbackMessages.push(newFeedback);
+            feedbackMessageInput.value = '';
+            feedbackRatingSelect.value = '5'; // Reset to default
+
+            renderFeedbackMessages();
+            renderSentimentChart();
+            showAlert('Feedback submitted successfully!');
+        } else {
+            showAlert('Please enter your feedback message.');
+        }
+    }
+
+    /**
+     * Exports all feedback messages to a CSV file.
+     */
+    function exportFeedbackMessagesToCSV() {
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Date,Rating,Sentiment,Message\n"; // CSV Header
+
+        feedbackMessages.forEach(row => {
+            // Escape double quotes in message and wrap in quotes if it contains commas or newlines
+            const escapedMessage = `"${row.message.replace(/"/g, '""')}"`;
+            csvContent += `${row.date},${row.rating},${row.sentiment},${escapedMessage}\n`;
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "customer_feedback.csv");
+        document.body.appendChild(link); // Required for Firefox
+        link.click();
+        document.body.removeChild(link); // Clean up
+        showAlert('Customer feedback exported to customer_feedback.csv!');
+    }
+
+    // Add event listeners for feedback section
+    submitFeedbackButton.addEventListener('click', addFeedbackMessage);
+    exportFeedbackMessagesButton.addEventListener('click', exportFeedbackMessagesToCSV);
+
+
+    /* --- Modal and General Functions --- */
+
+    /**
+     * Opens the modal with the specified app information.
+     * @param {string} appId - The ID of the app being opened.
+     * @param {string} title - The title of the app.
+     * @param {string} description - The description of the app.
+     */
+    function openModal(appId, title, description) {
+        modalTitle.textContent = title;
+        modalDescription.textContent = description;
+
+        // Hide all CRUD sections initially
+        menuCrudSection.classList.add('hidden');
+        ordersCrudSection.classList.add('hidden');
+        tableLayoutSection.classList.add('hidden');
+        staffRosterSection.classList.add('hidden');
+        inventoryCrudSection.classList.add('hidden');
+        reservationsSection.classList.add('hidden');
+        salesReportsSection.classList.add('hidden');
+        feedbackSection.classList.add('hidden'); // Hide feedback section
+        modalDescription.classList.remove('hidden'); // Default to showing description
+
+        // Show specific CRUD section based on app ID
+        if (appId === 'menu') {
+            menuCrudSection.classList.remove('hidden');
+            modalDescription.classList.add('hidden');
+            renderMenuItems();
+            resetMenuCrudForm();
+            proceedToAppButton.textContent = 'Close Management';
+        } else if (appId === 'orders') {
+            ordersCrudSection.classList.remove('hidden');
+            modalDescription.classList.add('hidden');
+            renderOrders();
+            resetOrderCrudForm();
+            proceedToAppButton.textContent = 'Close Tracking';
+        } else if (appId === 'tables') {
+            tableLayoutSection.classList.remove('hidden');
+            modalDescription.classList.add('hidden');
+            renderTables();
+            resetTableSelection();
+            proceedToAppButton.textContent = 'Close Layout';
+        } else if (appId === 'staff') {
+            staffRosterSection.classList.remove('hidden');
+            modalDescription.classList.add('hidden');
+            renderStaffMembers(); // Render staff members in calendar
+            resetStaffSelection(); // Reset staff selection and details panel
+            proceedToAppButton.textContent = 'Close Roster';
+        } else if (appId === 'inventory') {
+            inventoryCrudSection.classList.remove('hidden');
+            modalDescription.classList.add('hidden');
+            renderInventoryItems(); // Render inventory items in table
+            resetInventoryCrudForm(); // Reset inventory form
+            proceedToAppButton.textContent = 'Close Inventory';
+        } else if (appId === 'reservations') {
+            reservationsSection.classList.remove('hidden');
+            modalDescription.classList.add('hidden');
+            // Default to showing reservations tab
+            showReservationsTabButton.click(); // Simulate click to activate tab and render content
+            proceedToAppButton.textContent = 'Close Reservations';
+        } else if (appId === 'reports') {
+            salesReportsSection.classList.remove('hidden');
+            modalDescription.classList.add('hidden');
+            renderSalesChart();
+            renderSalesTable();
+            proceedToAppButton.textContent = 'Close Reports';
+        } else if (appId === 'feedback') { // Handle Customer Feedback
+            feedbackSection.classList.remove('hidden');
+            modalDescription.classList.add('hidden');
+            renderFeedbackMessages();
+            renderSentimentChart();
+            proceedToAppButton.textContent = 'Close Feedback';
+        }
+        else {
+            proceedToAppButton.textContent = 'Proceed to App';
+        }
+
+        // Store current app ID in a data attribute on the modal for "Proceed" button logic
+        appModalOverlay.dataset.currentAppId = appId;
+        appModalOverlay.classList.add('active');
+    }
+
+    /**
+     * Closes the modal.
+     */
+    function closeModal() {
+        appModalOverlay.classList.remove('active');
+        // Destroy Chart.js instances when modal closes to prevent memory leaks
+        if (salesChartInstance) {
+            salesChartInstance.destroy();
+            salesChartInstance = null;
+        }
+        if (sentimentChartInstance) {
+            sentimentChartInstance.destroy();
+            sentimentChartInstance = null;
+        }
+        // Clear any specific app states if needed
+        appModalOverlay.dataset.currentAppId = '';
+    }
+
+    // Add event listeners to all "Open" buttons
+    appGrid.addEventListener('click', (event) => {
+        const targetButton = event.target.closest('.restaurant-card-button');
+        if (targetButton) {
+            const appId = targetButton.dataset.appId;
+            const app = apps.find(a => a.id === appId);
+            if (app) {
+                openModal(app.id, app.title, app.description);
+            }
+        }
+    });
+
+    // Add event listener to the modal close button
+    modalCloseButton.addEventListener('click', closeModal);
+
+    // Close modal if clicking outside the content (on the overlay)
+    appModalOverlay.addEventListener('click', (event) => {
+        if (event.target === appModalOverlay) {
+            closeModal();
+        }
+    });
+
+    // Handle "Proceed to App" button click
+    proceedToAppButton.addEventListener('click', () => {
+        const currentAppId = appModalOverlay.dataset.currentAppId;
+        if (currentAppId === 'menu' || currentAppId === 'orders' || currentAppId === 'tables' || currentAppId === 'staff' || currentAppId === 'inventory' || currentAppId === 'reservations' || currentAppId === 'reports' || currentAppId === 'feedback') {
+            closeModal(); // For Management/Tracking/Tables/Staff/Inventory/Reservations/Reports/Feedback, "Proceed" acts as a close
+        } else {
+            const appTitle = apps.find(a => a.id === currentAppId)?.title || 'selected';
+            showAlert(`Proceeding to ${appTitle} App!`);
+            closeModal();
+        }
+    });
+</script>
+
+</body>
+</html>
