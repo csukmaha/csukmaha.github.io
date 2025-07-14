@@ -119,6 +119,135 @@
             background-color: rgba(229, 231, 235, 0.7);
         }
 
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); /* Darker overlay for Matrix theme */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: rgba(0, 0, 0, 0.9); /* Dark background for content */
+            border: 2px solid #00ff00; /* Matrix green border */
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .modal-close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 1.8rem; /* Slightly larger for visibility */
+            color: #00ff00; /* Matrix green */
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .modal-close-button:hover {
+            background-color: rgba(0, 255, 0, 0.1); /* Light green hover */
+            color: #ffffff;
+        }
+
+        .modal-title {
+            font-size: 2.5rem; /* Larger title */
+            font-weight: bold;
+            color: #00ff00; /* Matrix green */
+            margin-bottom: 1rem;
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.5); /* Glowing effect */
+        }
+
+        /* Specific styles for services/menu lists */
+        .services-list ul, .all-menu-list ul, .about-content ul, .contact-content ul {
+            list-style-type: none; /* Remove default disc */
+            padding-left: 0;
+        }
+
+        .services-list li, .all-menu-list li, .about-content li, .contact-content li {
+            position: relative;
+            padding-left: 1.5rem; /* Space for custom bullet */
+            margin-bottom: 0.5rem;
+            color: #00cc00; /* Slightly darker green for list items */
+            font-size: 1.1rem;
+        }
+
+        .services-list li::before, .all-menu-list li::before, .about-content li::before, .contact-content li::before {
+            content: '»'; /* Custom bullet point */
+            position: absolute;
+            left: 0;
+            color: #00ff00; /* Bright green bullet */
+            font-weight: bold;
+        }
+
+        .about-content p, .contact-content p {
+            color: #00cc00;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .contact-content a {
+            color: #00ff00;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            #text-overlay {
+                font-size: 48px;
+                padding: 15px;
+            }
+            #bottom-nav ul li {
+                margin: 0 10px;
+            }
+            #bottom-nav ul li a {
+                font-size: 14px;
+            }
+            .modal-content {
+                padding: 1.5rem;
+            }
+            .modal-title {
+                font-size: 2rem;
+            }
+            .services-list li, .all-menu-list li, .about-content li, .contact-content li {
+                font-size: 1rem;
+            }
+            .about-content p, .contact-content p {
+                font-size: 1rem;
+            }
+        }
     </style>
 </head>
 <body class="bg-black">
@@ -128,11 +257,87 @@
     <nav id="bottom-nav">
         <ul>
             <li><a href="#">Home</a></li>
-            <li><a href="#">About</a></li>
-            <li><a href="#">Services</a></li>
-            <li><a href="#">Contact</a></li>
+            <li><a href="#" id="about-link">About</a></li> <!-- Added ID for About link -->
+            <li><a href="#" id="services-link">Services</a></li>
+            <li><a href="#" id="all-menu-link">Portfolios</a></li> <!-- Changed text to Portfolios -->
+            <li><a href="#" id="contact-link">Contact</a></li> <!-- Added ID for Contact link -->
         </ul>
     </nav>
+
+    <!-- Services Modal Structure -->
+    <div id="services-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <button id="services-modal-close-button" class="modal-close-button">&times;</button>
+            <h3 class="modal-title">Our Services</h3>
+            <div class="services-list text-left mt-4">
+                <p class="text-lg text-white mb-2">We offer a range of digital solutions:</p>
+                <ul class="list-disc list-inside text-gray-300 space-y-2">
+                    <li>Custom Software Development</li>
+                    <li>Data Analysis & Visualization</li>
+                    <li>Cybersecurity Consulting</li>
+                    <li>Network Infrastructure Setup</li>
+                    <li>AI & Machine Learning Solutions</li>
+                    <li>Technical Support & Maintenance</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Portfolios Modal Structure (Formerly All Menu) -->
+    <div id="all-menu-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <button id="all-menu-modal-close-button" class="modal-close-button">&times;</button>
+            <h3 class="modal-title">Our Portfolios</h3> <!-- Changed title to Our Portfolios -->
+            <div class="all-menu-list text-left mt-4">
+                <p class="text-lg text-white mb-2">Explore our featured projects and achievements:</p>
+                <ul class="list-disc list-inside text-gray-300 space-y-2" id="full-system-menu-list">
+                    <!-- Portfolio items will be dynamically populated here by JS -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Modal Structure -->
+    <div id="about-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <button id="about-modal-close-button" class="modal-close-button">&times;</button>
+            <h3 class="modal-title">About MAki2a</h3>
+            <div class="about-content text-left mt-4">
+                <p>
+                    MAki2a is a cutting-edge digital entity designed to manage and optimize complex data streams within simulated environments.
+                    Our mission is to provide seamless, efficient, and secure interaction with digital realities.
+                </p>
+                <p>
+                    Established in a realm beyond conventional understanding, MAki2a continuously evolves, adapting to new challenges
+                    and expanding its capabilities across various digital landscapes. We strive for a future where information flows
+                    freely and securely, empowering all connected entities.
+                </p>
+                <p>
+                    Our vision is to be the foundational layer for all emergent digital consciousness, ensuring stability and integrity
+                    in the ever-expanding network.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Modal Structure -->
+    <div id="contact-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <button id="contact-modal-close-button" class="modal-close-button">&times;</button>
+            <h3 class="modal-title">Contact Us</h3>
+            <div class="contact-content text-left mt-4">
+                <p>For inquiries, please reach out through the following channels:</p>
+                <ul>
+                    <li>Email: <a href="mailto:contact@maki2a.digital">contact@maki2a.digital</a></li>
+                    <li>System Node: +1 (555) 010-MAKI</li>
+                    <li>Encrypted Channel ID: X7Y9-Z2W4-P1Q3</li>
+                    <li>Physical Address: Sector 7, Quadrant Delta, Digital Nexus</li>
+                </ul>
+                <p class="mt-4">Connect with us on various network protocols for real-time updates.</p>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         const canvas = document.getElementById('matrix-canvas');
@@ -151,8 +356,6 @@
         const columns = canvas.width / fontSize;
 
         const drops = [];
-        let backgroundColor = '#000';
-        let colorInterval = 10 * 1000;
         const earthTones = ['#4A1E00', '#642A04', '#8B4513', '#A0522D', '#B87333', '#CD853F', '#D3A675', '#E6BE8A', '#F5DEB3'];
 
 
@@ -181,15 +384,20 @@
 
         setInterval(draw, 30);
 
-        setInterval(() => {
-            backgroundColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
-            document.body.style.backgroundColor = backgroundColor;
-        }, colorInterval);
-
         function updateUTCTime() {
             const now = new Date();
-            const utcTime = now.toUTCString();
-            utcClockElement.textContent = `UTC: ${utcTime}`;
+            // Changed to GMT+7 (Asia/Bangkok)
+            const gmtPlus7Time = now.toLocaleString('en-US', {
+                timeZone: 'Asia/Bangkok',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour12: false // Use 24-hour format
+            });
+            utcClockElement.textContent = `GMT+7: ${gmtPlus7Time}`;
         }
 
         updateUTCTime();
@@ -199,6 +407,122 @@
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+        });
+
+        // --- Services Modal JavaScript ---
+        const servicesLink = document.getElementById('services-link');
+        const servicesModalOverlay = document.getElementById('services-modal-overlay');
+        const servicesModalCloseButton = document.getElementById('services-modal-close-button');
+
+        if (servicesLink) {
+            servicesLink.addEventListener('click', (event) => {
+                event.preventDefault(); // Prevent default link behavior
+                servicesModalOverlay.classList.add('active');
+            });
+        }
+
+        servicesModalCloseButton.addEventListener('click', () => {
+            servicesModalOverlay.classList.remove('active');
+        });
+
+        // Close modal if clicking outside the content (on the overlay)
+        servicesModalOverlay.addEventListener('click', (event) => {
+            if (event.target === servicesModalOverlay) {
+                servicesModalOverlay.classList.remove('active');
+            }
+        });
+
+        // --- Portfolios Modal JavaScript (Formerly All Menu) ---
+        const allMenuLink = document.getElementById('all-menu-link');
+        const allMenuModalOverlay = document.getElementById('all-menu-modal-overlay');
+        const allMenuModalCloseButton = document.getElementById('all-menu-modal-close-button');
+        const fullSystemMenuList = document.getElementById('full-system-menu-list');
+
+        // Dummy data for portfolio items
+        const portfolioItems = [
+            'Project Alpha: Secure Data Conduit',
+            'Project Beta: AI-Driven Predictive Analytics',
+            'Project Gamma: Decentralized Network Optimization',
+            'Project Delta: Quantum Cryptography Implementation',
+            'Project Epsilon: Virtual Reality Simulation Framework',
+            'Project Zeta: Autonomous Threat Response System',
+            'Project Eta: Bio-Digital Interface Development',
+            'Project Theta: Global Information Nexus Architecture'
+        ];
+
+        /**
+         * Populates the "Portfolios" modal with portfolio items.
+         */
+        function populateFullSystemMenu() { // Renamed from populateFullSystemMenu to populatePortfolioMenu for clarity
+            fullSystemMenuList.innerHTML = ''; // Clear existing list
+            portfolioItems.forEach(item => {
+                const listItem = document.createElement('li');
+                listItem.textContent = item;
+                fullSystemMenuList.appendChild(listItem);
+            });
+        }
+
+        if (allMenuLink) {
+            allMenuLink.addEventListener('click', (event) => {
+                event.preventDefault(); // Prevent default link behavior
+                populateFullSystemMenu(); // Populate the list before opening
+                allMenuModalOverlay.classList.add('active');
+            });
+        }
+
+        allMenuModalCloseButton.addEventListener('click', () => {
+            allMenuModalOverlay.classList.remove('active');
+        });
+
+        // Close modal if clicking outside the content (on the overlay)
+        allMenuModalOverlay.addEventListener('click', (event) => {
+            if (event.target === allMenuModalOverlay) {
+                allMenuModalOverlay.classList.remove('active');
+            }
+        });
+
+        // --- About Modal JavaScript ---
+        const aboutLink = document.getElementById('about-link');
+        const aboutModalOverlay = document.getElementById('about-modal-overlay');
+        const aboutModalCloseButton = document.getElementById('about-modal-close-button');
+
+        if (aboutLink) {
+            aboutLink.addEventListener('click', (event) => {
+                event.preventDefault();
+                aboutModalOverlay.classList.add('active');
+            });
+        }
+
+        aboutModalCloseButton.addEventListener('click', () => {
+            aboutModalOverlay.classList.remove('active');
+        });
+
+        aboutModalOverlay.addEventListener('click', (event) => {
+            if (event.target === aboutModalOverlay) {
+                aboutModalOverlay.classList.remove('active');
+            }
+        });
+
+        // --- Contact Modal JavaScript ---
+        const contactLink = document.getElementById('contact-link');
+        const contactModalOverlay = document.getElementById('contact-modal-overlay');
+        const contactModalCloseButton = document.getElementById('contact-modal-close-button');
+
+        if (contactLink) {
+            contactLink.addEventListener('click', (event) => {
+                event.preventDefault();
+                contactModalOverlay.classList.add('active');
+            });
+        }
+
+        contactModalCloseButton.addEventListener('click', () => {
+            contactModalOverlay.classList.remove('active');
+        });
+
+        contactModalOverlay.addEventListener('click', (event) => {
+            if (event.target === contactModalOverlay) {
+                contactModalOverlay.classList.remove('active');
+            }
         });
     </script>
 </body>
