@@ -592,7 +592,6 @@
             <button class="category-button" data-category="Main Courses">Main Courses</button>
             <button class="category-button" data-category="Desserts">Desserts</button>
             <button class="category-button" data-category="Drinks">Drinks</button>
-            <button class="category-button" id="view-all-menu-button">View All Menu</button>
             <button class="category-button" id="about-link">About</button> <!-- New About button -->
             <button class="category-button" id="contact-link">Contact</button> <!-- New Contact button -->
         </div>
@@ -933,35 +932,6 @@
                     renderMenuItems(selectedCategory);
                 }
             });
-        });
-
-        /* --- All Menu Modal Functions --- */
-
-        /**
-         * Renders all menu items in the full menu modal.
-         */
-        function renderFullMenuModal() {
-            fullMenuList.innerHTML = ''; // Clear existing list
-
-            menuItemsData.forEach(item => {
-                const listItem = document.createElement('li');
-                listItem.className = 'all-menu-item';
-                listItem.innerHTML = `
-                    <img src="${item.imageUrl}" alt="${item.name}" class="all-menu-item-image">
-                    <div class="all-menu-item-details">
-                        <span class="all-menu-item-name">${item.name} (${item.category})</span>
-                        <span class="all-menu-item-description">${item.description}</span>
-                    </div>
-                    <span class="all-menu-item-price">$${item.price.toFixed(2)}</span>
-                `;
-                fullMenuList.appendChild(listItem);
-            });
-        }
-
-        // Event listener for "View All Menu" button
-        viewAllMenuButton.addEventListener('click', () => {
-            renderFullMenuModal(); // Populate the modal
-            allMenuModalOverlay.classList.add('active'); // Show the modal
         });
 
         // Event listener for modal close button
