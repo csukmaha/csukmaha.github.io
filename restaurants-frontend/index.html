@@ -275,6 +275,197 @@
             background-color: #8b4513;
         }
 
+        /* Modal Styles (for All Menu, About, Contact Popups) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Dark semi-transparent overlay */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000; /* Ensure it's on top */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: #2c241e; /* Dark, warm background */
+            border: 2px solid #a0522d; /* Earthy brown border */
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 800px; /* Wider for menu items */
+            width: 90%;
+            text-align: center;
+            position: relative;
+            transform: translateY(-20px); /* Start slightly above center */
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            display: flex; /* Use flex for internal layout */
+            flex-direction: column;
+            max-height: 90vh; /* Limit modal height */
+            overflow-y: auto; /* Enable scrolling for modal content */
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0); /* Slide into place */
+            opacity: 1;
+        }
+
+        .modal-close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #f5f5dc;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .modal-close-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #a0522d;
+        }
+
+        .modal-title-text { /* Renamed to avoid conflict with .modal-title in main app */
+            font-size: 2rem;
+            font-weight: bold;
+            color: #d2b48c; /* Tan color for modal title */
+            margin-bottom: 1rem;
+        }
+
+        .all-menu-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 1rem;
+            max-height: 400px; /* Max height for scrollable menu */
+            overflow-y: auto;
+            border: 1px solid #8b4513;
+            border-radius: 8px;
+            background-color: rgba(160, 82, 45, 0.1);
+        }
+
+        .all-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(139, 69, 19, 0.5);
+            text-align: left;
+        }
+
+        .all-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .all-menu-item-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 4px;
+            object-fit: cover;
+            margin-right: 1rem;
+            border: 1px solid #d2b48c;
+        }
+
+        .all-menu-item-details {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .all-menu-item-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #f5f5dc;
+        }
+
+        .all-menu-item-description {
+            font-size: 0.85rem;
+            color: #e0e0d0;
+        }
+
+        .all-menu-item-price {
+            font-weight: 600;
+            color: #90ee90;
+            margin-left: 1rem;
+            flex-shrink: 0; /* Prevent price from shrinking */
+        }
+
+        /* Custom Alert/Confirm Modal */
+        .custom-alert-modal, .custom-confirm-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #2c241e;
+            color: #f5f5dc;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.7);
+            z-index: 1002;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            border: 2px solid #a0522d;
+            max-width: 350px;
+            text-align: center;
+        }
+
+        .custom-alert-modal button, .custom-confirm-modal button {
+            background-color: #8b4513;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .custom-alert-modal button:hover, .custom-confirm-modal button:hover {
+            background-color: #a0522d;
+        }
+
+        .custom-confirm-modal .bg-red-700:hover {
+            background-color: #a0522d; /* Keep red hover for delete */
+        }
+
+        /* About and Contact Modal Specific Styles */
+        .about-content, .contact-content {
+            text-align: left;
+            color: #e0e0d0;
+            font-size: 1.1rem;
+        }
+        .about-content p, .contact-content p {
+            margin-bottom: 1rem;
+        }
+        .contact-content ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .contact-content li {
+            margin-bottom: 0.5rem;
+        }
+        .contact-content a {
+            color: #d2b48c;
+            text-decoration: underline;
+        }
+        .contact-content a:hover {
+            color: #f5f5dc;
+        }
+
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .container {
@@ -363,6 +554,30 @@
                 padding: 0.8rem 1.5rem;
                 font-size: 1rem;
             }
+            /* Modal responsive adjustments */
+            .modal-content {
+                padding: 1.5rem;
+            }
+            .modal-title-text {
+                font-size: 1.5rem;
+            }
+            .all-menu-item-image {
+                width: 40px;
+                height: 40px;
+                margin-right: 0.75rem;
+            }
+            .all-menu-item-name {
+                font-size: 1rem;
+            }
+            .all-menu-item-description {
+                font-size: 0.75rem;
+            }
+            .all-menu-item-price {
+                font-size: 0.9rem;
+            }
+            .about-content p, .contact-content p {
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
@@ -377,245 +592,444 @@
             <button class="category-button" data-category="Main Courses">Main Courses</button>
             <button class="category-button" data-category="Desserts">Desserts</button>
             <button class="category-button" data-category="Drinks">Drinks</button>
+            <button class="category-button" id="view-all-menu-button">View All Menu</button>
+            <button class="category-button" id="about-link">About</button> <!-- New About button -->
+            <button class="category-button" id="contact-link">Contact</button> <!-- New Contact button -->
         </div>
 
         <!-- Menu Items Display -->
-        <div class="menu-grid">
-            <!-- Example Meal Card 1 -->
-            <div class="meal-card" data-category="Main Courses">
-                <img src="https://placehold.co/150x150/8B4513/F5F5DC?text=Burger" alt="Classic Burger" class="meal-image">
-                <h3 class="meal-name">Classic Burger</h3>
-                <p class="meal-description">Juicy beef patty, fresh lettuce, tomato, onion, and our special sauce.</p>
-                <p class="meal-price">$12.99</p>
-                <div class="quantity-control">
-                    <button class="quantity-button">-</button>
-                    <input type="number" value="1" min="1" class="quantity-input">
-                    <button class="quantity-button">+</button>
-                </div>
-                <button class="add-to-cart-button">Add to Cart</button>
-            </div>
-
-            <!-- Example Meal Card 2 -->
-            <div class="meal-card" data-category="Appetizers">
-                <img src="https://placehold.co/150x150/A0522D/F5F5DC?text=Salad" alt="Caesar Salad" class="meal-image">
-                <h3 class="meal-name">Caesar Salad</h3>
-                <p class="meal-description">Crisp romaine, croutons, parmesan, and creamy Caesar dressing.</p>
-                <p class="meal-price">$9.50</p>
-                <div class="quantity-control">
-                    <button class="quantity-button">-</button>
-                    <input type="number" value="1" min="1" class="quantity-input">
-                    <button class="quantity-button">+</button>
-                </div>
-                <button class="add-to-cart-button">Add to Cart</button>
-            </div>
-
-            <!-- Example Meal Card 3 -->
-            <div class="meal-card" data-category="Main Courses">
-                <img src="https://placehold.co/150x150/D2B48C/2C241E?text=Pasta" alt="Spaghetti Bolognese" class="meal-image">
-                <h3 class="meal-name">Spaghetti Bolognese</h3>
-                <p class="meal-description">Rich meat sauce slow-cooked to perfection, served over al dente spaghetti.</p>
-                <p class="meal-price">$15.75</p>
-                <div class="quantity-control">
-                    <button class="quantity-button">-</button>
-                    <input type="number" value="1" min="1" class="quantity-input">
-                    <button class="quantity-button">+</button>
-                </div>
-                <button class="add-to-cart-button">Add to Cart</button>
-            </div>
-
-            <!-- Example Meal Card 4 -->
-            <div class="meal-card" data-category="Appetizers">
-                <img src="https://placehold.co/150x150/2C241E/D2B48C?text=Soup" alt="Tomato Soup" class="meal-image">
-                <h3 class="meal-name">Creamy Tomato Soup</h3>
-                <p class="meal-description">Homemade tomato soup with a touch of cream, served with crusty bread.</p>
-                <p class="meal-price">$7.00</p>
-                <div class="quantity-control">
-                    <button class="quantity-button">-</button>
-                    <input type="number" value="1" min="1" class="quantity-input">
-                    <button class="quantity-button">+</button>
-                </div>
-                <button class="add-to-cart-button">Add to Cart</button>
-            </div>
-
-            <!-- Example Meal Card 5 -->
-            <div class="meal-card" data-category="Main Courses">
-                <img src="https://placehold.co/150x150/FF6347/F5F5DC?text=Steak" alt="Grilled Steak" class="meal-image">
-                <h3 class="meal-name">Grilled Ribeye Steak</h3>
-                <p class="meal-description">Perfectly grilled ribeye steak with a side of seasonal vegetables.</p>
-                <p class="meal-price">$24.50</p>
-                <div class="quantity-control">
-                    <button class="quantity-button">-</button>
-                    <input type="number" value="1" min="1" class="quantity-input">
-                    <button class="quantity-button">+</button>
-                </div>
-                <button class="add-to-cart-button">Add to Cart</button>
-            </div>
-
-            <!-- Example Meal Card 6 -->
-            <div class="meal-card" data-category="Desserts">
-                <img src="https://placehold.co/150x150/90EE90/2C241E?text=Cheesecake" alt="New York Cheesecake" class="meal-image">
-                <h3 class="meal-name">New York Cheesecake</h3>
-                <p class="meal-description">Classic creamy cheesecake with a graham cracker crust.</p>
-                <p class="meal-price">$8.25</p>
-                <div class="quantity-control">
-                    <button class="quantity-button">-</button>
-                    <input type="number" value="1" min="1" class="quantity-input">
-                    <button class="quantity-button">+</button>
-                </div>
-                <button class="add-to-cart-button">Add to Cart</button>
-            </div>
-
-            <!-- Example Meal Card 7 -->
-            <div class="meal-card" data-category="Drinks">
-                <img src="https://placehold.co/150x150/8B4513/F5F5DC?text=Coffee" alt="Espresso" class="meal-image">
-                <h3 class="meal-name">Espresso</h3>
-                <p class="meal-description">Strong, concentrated coffee shot.</p>
-                <p class="meal-price">$3.00</p>
-                <div class="quantity-control">
-                    <button class="quantity-button">-</button>
-                    <input type="number" value="1" min="1" class="quantity-input">
-                    <button class="quantity-button">+</button>
-                </div>
-                <button class="add-to-cart-button">Add to Cart</button>
-            </div>
-
-            <!-- Example Meal Card 8 -->
-            <div class="meal-card" data-category="Drinks">
-                <img src="https://placehold.co/150x150/A0522D/F5F5DC?text=Juice" alt="Orange Juice" class="meal-image">
-                <h3 class="meal-name">Fresh Orange Juice</h3>
-                <p class="meal-description">Freshly squeezed orange juice, rich in Vitamin C.</p>
-                <p class="meal-price">$4.50</p>
-                <div class="quantity-control">
-                    <button class="quantity-button">-</button>
-                    <input type="number" value="1" min="1" class="quantity-input">
-                    <button class="quantity-button">+</button>
-                </div>
-                <button class="add-to-cart-button">Add to Cart</button>
-            </div>
-
+        <div class="menu-grid" id="menu-items-grid">
+            <!-- Meal cards will be dynamically loaded here -->
         </div>
 
         <!-- Order Summary / Cart Section -->
         <div class="order-summary">
             <h2 class="section-title">Your Order</h2>
-            <ul class="order-list">
-                <!-- Example Order Item 1 -->
-                <li class="order-item">
-                    <div class="order-item-details">
-                        <span class="order-item-name">Classic Burger</span>
-                        <span class="order-item-quantity">(x2)</span>
-                    </div>
-                    <span class="order-item-price">$25.98</span>
-                    <button class="remove-item-button">Remove</button>
-                </li>
-                <!-- Example Order Item 2 -->
-                <li class="order-item">
-                    <div class="order-item-details">
-                        <span class="order-item-name">Caesar Salad</span>
-                        <span class="order-item-quantity">(x1)</span>
-                    </div>
-                    <span class="order-item-price">$9.50</span>
-                    <button class="remove-item-button">Remove</button>
-                </li>
-                <!-- No items message (hidden by default, shown if cart is empty) -->
+            <ul class="order-list" id="order-list">
+                <!-- Order items will be dynamically loaded here -->
                 <li class="order-item-details text-center py-4" style="display: none;" id="empty-cart-message">Your cart is empty.</li>
             </ul>
 
             <div class="order-total">
                 <span>Total:</span>
-                <span id="cart-total">$35.48</span>
+                <span id="cart-total">$0.00</span>
             </div>
 
             <button class="checkout-button">Proceed to Checkout</button>
         </div>
     </div>
 
+    <!-- All Menu Modal Structure -->
+    <div id="all-menu-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <button id="all-menu-modal-close-button" class="modal-close-button">&times;</button>
+            <h3 class="modal-title-text">Our Full Menu</h3>
+            <ul class="all-menu-list" id="full-menu-list">
+                <!-- Full menu items will be dynamically loaded here -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- About Modal Structure (New) -->
+    <div id="about-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <button id="about-modal-close-button" class="modal-close-button">&times;</button>
+            <h3 class="modal-title-text">About Our Restaurant</h3>
+            <div class="about-content mt-4">
+                <p>
+                    Welcome to our restaurant! We are dedicated to serving delicious and high-quality meals made with the freshest ingredients.
+                    Our passion is to create a memorable dining experience for every customer.
+                </p>
+                <p>
+                    Since our establishment in [Year], we have strived to blend traditional flavors with modern culinary techniques,
+                    offering a diverse menu that caters to all tastes. We believe in good food, great company, and exceptional service.
+                </p>
+                <p>
+                    Thank you for choosing us. We look forward to serving you!
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Modal Structure (New) -->
+    <div id="contact-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <button id="contact-modal-close-button" class="modal-close-button">&times;</button>
+            <h3 class="modal-title-text">Contact Us</h3>
+            <div class="contact-content mt-4">
+                <p>Have questions or feedback? Feel free to reach out to us:</p>
+                <ul>
+                    <li><strong>Email:</strong> <a href="mailto:info@ourrestaurant.com">info@ourrestaurant.com</a></li>
+                    <li><strong>Phone:</strong> +1 (123) 456-7890</li>
+                    <li><strong>Address:</strong> 123 Main Street, Anytown, USA 12345</li>
+                </ul>
+                <p class="mt-4">Our team is available during business hours to assist you.</p>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Basic JavaScript for interactivity (can be expanded with React for full functionality)
+        // Data for menu items
+        const menuItemsData = [
+            { id: 'm1', name: 'Classic Burger', description: 'Juicy beef patty, fresh lettuce, tomato, onion, and our special sauce.', price: 12.99, category: 'Main Courses', imageUrl: 'https://placehold.co/150x150/8B4513/F5F5DC?text=Burger' },
+            { id: 'm2', name: 'Caesar Salad', description: 'Crisp romaine, croutons, parmesan, and creamy Caesar dressing.', price: 9.50, category: 'Appetizers', imageUrl: 'https://placehold.co/150x150/A0522D/F5F5DC?text=Salad' },
+            { id: 'm3', name: 'Spaghetti Bolognese', description: 'Rich meat sauce slow-cooked to perfection, served over al dente spaghetti.', price: 15.75, category: 'Main Courses', imageUrl: 'https://placehold.co/150x150/D2B48C/2C241E?text=Pasta' },
+            { id: 'm4', name: 'Creamy Tomato Soup', description: 'Homemade tomato soup with a touch of cream, served with crusty bread.', price: 7.00, category: 'Appetizers', imageUrl: 'https://placehold.co/150x150/2C241E/D2B48C?text=Soup' },
+            { id: 'm5', name: 'Grilled Ribeye Steak', description: 'Perfectly grilled ribeye steak with a side of seasonal vegetables.', price: 24.50, category: 'Main Courses', imageUrl: 'https://placehold.co/150x150/FF6347/F5F5DC?text=Steak' },
+            { id: 'm6', name: 'New York Cheesecake', description: 'Classic creamy cheesecake with a graham cracker crust.', price: 8.25, category: 'Desserts', imageUrl: 'https://placehold.co/150x150/90EE90/2C241E?text=Cheesecake' },
+            { id: 'm7', name: 'Espresso', description: 'Strong, concentrated coffee shot.', price: 3.00, category: 'Drinks', imageUrl: 'https://placehold.co/150x150/8B4513/F5F5DC?text=Coffee' },
+            { id: 'm8', name: 'Fresh Orange Juice', description: 'Freshly squeezed orange juice, rich in Vitamin C.', price: 4.50, category: 'Drinks', imageUrl: 'https://placehold.co/150x150/A0522D/F5F5DC?text=Juice' },
+        ];
 
-        // Get all meal cards
-        const mealCards = document.querySelectorAll('.meal-card');
+        // In-memory cart
+        let cart = [];
 
-        // Example: Category button active state and filtering
-        document.querySelectorAll('.category-button').forEach(button => {
-            button.addEventListener('click', () => {
-                // Remove 'active' from all category buttons
-                document.querySelectorAll('.category-button').forEach(btn => btn.classList.remove('active'));
-                // Add 'active' to the clicked button
-                button.classList.add('active');
+        // Get elements
+        const menuItemsGrid = document.getElementById('menu-items-grid');
+        const orderList = document.getElementById('order-list');
+        const cartTotalSpan = document.getElementById('cart-total');
+        const emptyCartMessage = document.getElementById('empty-cart-message');
+        const categoryButtons = document.querySelectorAll('.category-button');
 
-                const selectedCategory = button.dataset.category; // Get category from data-category attribute
+        // All Menu Modal elements
+        const viewAllMenuButton = document.getElementById('view-all-menu-button');
+        const allMenuModalOverlay = document.getElementById('all-menu-modal-overlay');
+        const allMenuModalCloseButton = document.getElementById('all-menu-modal-close-button');
+        const fullMenuList = document.getElementById('full-menu-list');
 
-                mealCards.forEach(card => {
-                    const cardCategory = card.dataset.category;
-                    if (selectedCategory === 'All' || cardCategory === selectedCategory) {
-                        card.style.display = 'flex'; // Show the card
-                    } else {
-                        card.style.display = 'none'; // Hide the card
+        // About Modal elements
+        const aboutLink = document.getElementById('about-link');
+        const aboutModalOverlay = document.getElementById('about-modal-overlay');
+        const aboutModalCloseButton = document.getElementById('about-modal-close-button');
+
+        // Contact Modal elements
+        const contactLink = document.getElementById('contact-link');
+        const contactModalOverlay = document.getElementById('contact-modal-overlay');
+        const contactModalCloseButton = document.getElementById('contact-modal-close-button');
+
+
+        /**
+         * Displays a custom alert message.
+         * @param {string} message - The message to display.
+         */
+        function showAlert(message) {
+            const modal = document.createElement('div');
+            modal.className = 'custom-alert-modal';
+            modal.innerHTML = `
+                <p>${message}</p>
+                <button onclick="this.parentNode.remove()">OK</button>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        /**
+         * Displays a custom confirmation message.
+         * @param {string} message - The confirmation message.
+         * @returns {Promise<boolean>} - Resolves true if confirmed, false otherwise.
+         */
+        function showConfirm(message) {
+            return new Promise(resolve => {
+                const confirmModal = document.createElement('div');
+                confirmModal.className = 'custom-confirm-modal';
+                confirmModal.innerHTML = `
+                    <p class="text-lg font-semibold">${message}</p>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="confirm-yes" class="crud-button bg-red-700 hover:bg-red-800">Yes</button>
+                        <button id="confirm-no" class="crud-button">Cancel</button>
+                    </div>
+                `;
+                document.body.appendChild(confirmModal);
+
+                document.getElementById('confirm-yes').onclick = () => {
+                    confirmModal.remove();
+                    resolve(true);
+                };
+                document.getElementById('confirm-no').onclick = () => {
+                    confirmModal.remove();
+                    resolve(false);
+                };
+            });
+        }
+
+        /**
+         * Renders meal cards based on the selected category.
+         * @param {string} category - The category to filter by ('All', 'Appetizers', etc.).
+         */
+        function renderMenuItems(category) {
+            menuItemsGrid.innerHTML = ''; // Clear existing cards
+
+            const filteredItems = category === 'All'
+                ? menuItemsData
+                : menuItemsData.filter(item => item.category === category);
+
+            if (filteredItems.length === 0) {
+                menuItemsGrid.innerHTML = `<p class="text-center text-lg text-gray-400 col-span-full py-8">No items found in this category.</p>`;
+                return;
+            }
+
+            filteredItems.forEach(item => {
+                const mealCard = document.createElement('div');
+                mealCard.className = 'meal-card';
+                mealCard.dataset.id = item.id;
+                mealCard.dataset.category = item.category; // Ensure category is on the card
+
+                mealCard.innerHTML = `
+                    <img src="${item.imageUrl}" alt="${item.name}" class="meal-image">
+                    <h3 class="meal-name">${item.name}</h3>
+                    <p class="meal-description">${item.description}</p>
+                    <p class="meal-price">$${item.price.toFixed(2)}</p>
+                    <div class="quantity-control">
+                        <button class="quantity-button minus-button" data-id="${item.id}">-</button>
+                        <input type="number" value="1" min="1" class="quantity-input" data-id="${item.id}">
+                        <button class="quantity-button plus-button" data-id="${item.id}">+</button>
+                    </div>
+                    <button class="add-to-cart-button" data-id="${item.id}">Add to Cart</button>
+                `;
+                menuItemsGrid.appendChild(mealCard);
+            });
+            attachQuantityControlListeners();
+            attachAddToCartListeners();
+        }
+
+        /**
+         * Attaches event listeners for quantity controls (+/- buttons).
+         */
+        function attachQuantityControlListeners() {
+            document.querySelectorAll('.quantity-button.minus-button').forEach(button => {
+                button.onclick = (event) => {
+                    const card = event.target.closest('.meal-card');
+                    const quantityInput = card.querySelector('.quantity-input');
+                    let currentQuantity = parseInt(quantityInput.value);
+                    if (currentQuantity > 1) {
+                        quantityInput.value = currentQuantity - 1;
                     }
-                });
-
-                console.log('Category selected:', selectedCategory);
-            });
-        });
-
-        // Example: Quantity control
-        document.querySelectorAll('.meal-card').forEach(card => {
-            const quantityInput = card.querySelector('.quantity-input');
-            const minusButton = card.querySelector('.quantity-button:first-of-type');
-            const plusButton = card.querySelector('.quantity-button:last-of-type');
-            const addToCartButton = card.querySelector('.add-to-cart-button');
-
-            minusButton.addEventListener('click', () => {
-                let currentQuantity = parseInt(quantityInput.value);
-                if (currentQuantity > 1) {
-                    quantityInput.value = currentQuantity - 1;
-                }
+                };
             });
 
-            plusButton.addEventListener('click', () => {
-                let currentQuantity = parseInt(quantityInput.value);
-                quantityInput.value = currentQuantity + 1;
+            document.querySelectorAll('.quantity-button.plus-button').forEach(button => {
+                button.onclick = (event) => {
+                    const card = event.target.closest('.meal-card');
+                    const quantityInput = card.querySelector('.quantity-input');
+                    let currentQuantity = parseInt(quantityInput.value);
+                    quantityInput.value = currentQuantity + 1;
+                };
             });
+        }
 
-            addToCartButton.addEventListener('click', () => {
-                const mealName = card.querySelector('.meal-name').textContent;
-                const quantity = parseInt(quantityInput.value);
-                alert(`Added ${quantity} x ${mealName} to cart! (This is a placeholder alert)`);
-                // In a real app, this would add to a cart state
+        /**
+         * Attaches event listeners for "Add to Cart" buttons.
+         */
+        function attachAddToCartListeners() {
+            document.querySelectorAll('.add-to-cart-button').forEach(button => {
+                button.onclick = (event) => {
+                    const mealId = event.target.dataset.id;
+                    const card = event.target.closest('.meal-card');
+                    const quantityInput = card.querySelector('.quantity-input');
+                    const quantity = parseInt(quantityInput.value);
+
+                    const menuItem = menuItemsData.find(item => item.id === mealId);
+
+                    if (menuItem && quantity > 0) {
+                        addToCart(menuItem, quantity);
+                        showAlert(`${quantity} x ${menuItem.name} added to cart!`);
+                        quantityInput.value = 1; // Reset quantity input
+                    } else {
+                        showAlert('Please select a valid quantity.');
+                    }
+                };
             });
-        });
+        }
 
-        // Example: Remove item from cart (placeholder)
-        document.querySelectorAll('.remove-item-button').forEach(button => {
-            button.addEventListener('click', () => {
-                const itemElement = button.closest('.order-item');
-                const itemName = itemElement.querySelector('.order-item-name').textContent;
-                alert(`Removed ${itemName} from cart! (Placeholder)`);
-                itemElement.remove();
-                // In a real app, this would update the cart state and recalculate total
-            });
-        });
+        /**
+         * Adds an item to the cart or updates its quantity.
+         * @param {object} item - The menu item object.
+         * @param {number} quantity - The quantity to add.
+         */
+        function addToCart(item, quantity) {
+            const existingItemIndex = cart.findIndex(cartItem => cartItem.menuItemId === item.id);
 
-        document.querySelector('.checkout-button').addEventListener('click', () => {
-            alert('Proceeding to checkout! (Placeholder)');
-        });
-
-        // Placeholder for dynamic cart update (e.g., if cart becomes empty)
-        function updateCartDisplay() {
-            const orderList = document.querySelector('.order-list');
-            const emptyMessage = document.getElementById('empty-cart-message');
-            // Filter out the empty cart message itself when checking children length
-            const actualItems = Array.from(orderList.children).filter(item => item.id !== 'empty-cart-message');
-
-            if (actualItems.length === 0) {
-                emptyMessage.style.display = 'block';
+            if (existingItemIndex > -1) {
+                cart[existingItemIndex].quantity += quantity;
+                cart[existingItemIndex].subtotal = cart[existingItemIndex].quantity * cart[existingItemIndex].price;
             } else {
-                emptyMessage.style.display = 'none';
+                cart.push({
+                    menuItemId: item.id,
+                    name: item.name,
+                    quantity: quantity,
+                    price: item.price,
+                    subtotal: quantity * item.price
+                });
+            }
+            renderCart();
+        }
+
+        /**
+         * Removes an item from the cart.
+         * @param {string} menuItemId - The ID of the menu item to remove.
+         */
+        async function removeFromCart(menuItemId) {
+            const itemToRemove = cart.find(item => item.menuItemId === menuItemId);
+            if (itemToRemove) {
+                const confirmed = await showConfirm(`Are you sure you want to remove "${itemToRemove.name}" from your cart?`);
+                if (confirmed) {
+                    cart = cart.filter(item => item.menuItemId !== menuItemId);
+                    renderCart();
+                    showAlert(`Removed ${itemToRemove.name} from cart.`);
+                }
             }
         }
-        // Call initially to set correct state
-        updateCartDisplay();
+
+        /**
+         * Renders the current state of the cart.
+         */
+        function renderCart() {
+            orderList.innerHTML = ''; // Clear existing cart items
+
+            if (cart.length === 0) {
+                emptyCartMessage.style.display = 'block';
+            } else {
+                emptyCartMessage.style.display = 'none';
+                cart.forEach(item => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'order-item';
+                    listItem.innerHTML = `
+                        <div class="order-item-details">
+                            <span class="order-item-name">${item.name}</span>
+                            <span class="order-item-quantity">(x${item.quantity})</span>
+                        </div>
+                        <span class="order-item-price">$${item.subtotal.toFixed(2)}</span>
+                        <button class="remove-item-button" data-id="${item.menuItemId}">Remove</button>
+                    `;
+                    orderList.appendChild(listItem);
+                });
+            }
+
+            // Attach event listeners to new remove buttons
+            document.querySelectorAll('.remove-item-button').forEach(button => {
+                button.onclick = (event) => {
+                    const idToRemove = event.target.dataset.id;
+                    removeFromCart(idToRemove);
+                };
+            });
+
+            updateCartTotal();
+        }
+
+        /**
+         * Updates the total price displayed in the cart.
+         */
+        function updateCartTotal() {
+            const total = cart.reduce((sum, item) => sum + item.subtotal, 0);
+            cartTotalSpan.textContent = `$${total.toFixed(2)}`;
+        }
+
+        /* --- Category Filtering --- */
+        categoryButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                categoryButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                const selectedCategory = button.dataset.category;
+                if (selectedCategory) { // Ensure it's a category button, not a modal trigger
+                    renderMenuItems(selectedCategory);
+                }
+            });
+        });
+
+        /* --- All Menu Modal Functions --- */
+
+        /**
+         * Renders all menu items in the full menu modal.
+         */
+        function renderFullMenuModal() {
+            fullMenuList.innerHTML = ''; // Clear existing list
+
+            menuItemsData.forEach(item => {
+                const listItem = document.createElement('li');
+                listItem.className = 'all-menu-item';
+                listItem.innerHTML = `
+                    <img src="${item.imageUrl}" alt="${item.name}" class="all-menu-item-image">
+                    <div class="all-menu-item-details">
+                        <span class="all-menu-item-name">${item.name} (${item.category})</span>
+                        <span class="all-menu-item-description">${item.description}</span>
+                    </div>
+                    <span class="all-menu-item-price">$${item.price.toFixed(2)}</span>
+                `;
+                fullMenuList.appendChild(listItem);
+            });
+        }
+
+        // Event listener for "View All Menu" button
+        viewAllMenuButton.addEventListener('click', () => {
+            renderFullMenuModal(); // Populate the modal
+            allMenuModalOverlay.classList.add('active'); // Show the modal
+        });
+
+        // Event listener for modal close button
+        allMenuModalCloseButton.addEventListener('click', () => {
+            allMenuModalOverlay.classList.remove('active');
+        });
+
+        // Close modal if clicking outside the content (on the overlay)
+        allMenuModalOverlay.addEventListener('click', (event) => {
+            if (event.target === allMenuModalOverlay) {
+                allMenuModalOverlay.classList.remove('active');
+            }
+        });
+
+        /* --- About Modal Functions --- */
+        aboutLink.addEventListener('click', (event) => {
+            event.preventDefault();
+            aboutModalOverlay.classList.add('active');
+        });
+
+        aboutModalCloseButton.addEventListener('click', () => {
+            aboutModalOverlay.classList.remove('active');
+        });
+
+        aboutModalOverlay.addEventListener('click', (event) => {
+            if (event.target === aboutModalOverlay) {
+                aboutModalOverlay.classList.remove('active');
+            }
+        });
+
+        /* --- Contact Modal Functions --- */
+        contactLink.addEventListener('click', (event) => {
+            event.preventDefault();
+            contactModalOverlay.classList.add('active');
+        });
+
+        contactModalCloseButton.addEventListener('click', () => {
+            contactModalOverlay.classList.remove('active');
+        });
+
+        contactModalOverlay.addEventListener('click', (event) => {
+            if (event.target === contactModalOverlay) {
+                contactModalOverlay.classList.remove('active');
+            }
+        });
+
+
+        // Initial render on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            renderMenuItems('All'); // Show all items by default
+            renderCart(); // Initialize cart display
+        });
+
+        // Checkout button functionality
+        document.querySelector('.checkout-button').addEventListener('click', async () => {
+            if (cart.length > 0) {
+                const total = cart.reduce((sum, item) => sum + item.subtotal, 0);
+                const confirmed = await showConfirm(`Confirm checkout? Your total is $${total.toFixed(2)}`);
+                if (confirmed) {
+                    showAlert('Order placed successfully! Thank you for your purchase.');
+                    cart = []; // Clear cart after checkout
+                    renderCart();
+                }
+            } else {
+                showAlert('Your cart is empty. Please add items before checking out.');
+            }
+        });
+
     </script>
 </body>
 </html>
