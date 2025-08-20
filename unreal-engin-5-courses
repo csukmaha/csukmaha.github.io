@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unreal Engine 5 City Builder Course</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: "Tech Learn Palette" - A combination of slate grays for a professional feel, with a sky blue accent for interactive elements and highlights. -->
+    <!-- Application Structure Plan: The SPA is designed with a fixed sidebar for module navigation and a dynamic main content area. This structure provides a persistent, clear navigation path, allowing users to easily jump between modules without losing context, which is superior to scrolling through a long document. The initial view is a dashboard-style overview with cards for each module, giving a comprehensive summary of the learning journey. This non-linear approach enhances usability for learners who may wish to review or preview different sections of the course at will. -->
+    <!-- Visualization & Content Choices: 
+        - Course Overview: Report Info -> Full course structure. Goal -> Organize/Inform. Viz/Method -> A grid of interactive cards, one for each module. Interaction -> Clicking a card navigates to that module's detailed view. Justification -> Provides a high-level, visually appealing summary of the entire course, encouraging exploration. Library/Method -> HTML/CSS with Tailwind.
+        - Module Duration Comparison: Report Info -> Duration of each module in weeks. Goal -> Compare. Viz/Method -> A horizontal bar chart. Interaction -> Tooltips on hover display the exact duration. Justification -> Offers a quick, scannable visual comparison of the time commitment required for each module, aiding in planning. Library/Method -> Chart.js (Canvas).
+        - Module Details (Objectives, Topics, Project): Report Info -> Detailed text content for each module. Goal -> Inform. Viz/Method -> Accordion-style collapsible sections for each topic. Interaction -> Clicking a topic header expands to show details. Justification -> Manages information density, preventing user overload by presenting detailed content on demand. Library/Method -> HTML/CSS/JS.
+        - Recommended Resources: Report Info -> List of tools and links. Goal -> Inform. Viz/Method -> A styled list within a distinct card. Interaction -> Static display. Justification -> Consolidates all necessary resources into an easily accessible and readable format. Library/Method -> HTML/CSS with Tailwind.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-white border-r border-slate-200 p-6 hidden md:flex flex-col">
+            <h1 class="text-xl font-bold text-slate-900 mb-8">UE5 City Builder</h1>
+            <nav id="sidebar-nav" class="flex flex-col space-y-2">
+                <a href="#overview" data-module="overview" class="nav-link text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium rounded-md px-3 py-2 transition-colors duration-200 bg-slate-100 text-slate-900">
+                    <span class="mr-2">🏠</span> Course Overview
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8">
+            <div id="content-area" class="w-full max-w-7xl mx-auto">
+                <!-- Content will be dynamically inserted here -->
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const courseData = {
+            modules: [
+                { id: 1, title: "UE5 Fundamentals", duration: 2, icon: "🛠️", objectives: ["Understand the Unreal Engine 5 interface and navigation.", "Master basic asset import and management.", "Learn the fundamentals of Blueprints visual scripting.", "Familiarize with Actors, Components, and basic level design."], topics: [{ title: "Introduction to Unreal Engine 5", points: ["Installation and Epic Games Launcher.", "Creating new projects (Game Template: Blank/Third Person).", "Overview of the Unreal Editor UI: Viewport, Content Browser, Details Panel, World Outliner.", "Basic navigation (WASD, Mouse, Orbiting)."] }, { title: "Asset Pipeline & Content Management", points: ["Importing static meshes, textures, and basic materials.", "Using Quixel Bridge for Megascans assets.", "Organizing content in the Content Browser."] }, { title: "Blueprints Visual Scripting Basics", points: ["What are Blueprints? (Event Graph, Construction Script, Components).", "Creating Actors and Actor Blueprints.", "Variables, Data Types, and Basic Flow Control (Branch, Sequence, Loop).", "Event-driven programming (Event BeginPlay, Tick)."] }, { title: "Basic Level Design", points: ["Placing and manipulating Actors in the world.", "Transformations (Location, Rotation, Scale).", "Introduction to basic lighting (Directional Light, Sky Light).", "Building simple environments with primitive shapes."] }], project: "Create a small, interactive scene where a player character can walk around a basic environment with some static objects. Implement a simple interaction using Blueprints (e.g., press a key to change an object's color)." },
+                { id: 2, title: "World Building & Camera", duration: 2, icon: "🌍", objectives: ["Develop skills in creating large-scale landscapes.", "Implement a city-builder specific camera system.", "Understand basic lighting and atmosphere for an open world."], topics: [{ title: "Landscape & Terrain Tools", points: ["Creating and sculpting terrains.", "Painting landscape materials (layers, blend types).", "Using foliage tools for vegetation placement (trees, grass).", "Introduction to World Partition for large worlds."] }, { title: "City Builder Camera System", points: ["Creating a custom Player Controller.", "Implementing top-down camera movement (pan, zoom, rotate).", "Camera collision and bounds.", "Mouse input for camera control."] }, { title: "Atmosphere & Lighting", points: ["Sky Atmosphere, Volumetric Clouds.", "Post-Processing Volume for visual effects (color grading, bloom, depth of field).", "Working with Lumen for dynamic global illumination."] }], project: "Build a large, detailed landscape suitable for a city. Implement a fully functional top-down camera system similar to popular city builders." },
+                { id: 3, title: "Placement & Grid Systems", duration: 3, icon: "🏗️", objectives: ["Design and implement a grid-based building system.", "Create dynamic placement previews.", "Manage building states (valid/invalid placement)."], topics: [{ title: "Grid System Implementation", points: ["Creating a grid manager Blueprint (e.g., a custom Actor Component or Game Mode).", "Defining grid cell size and coordinates.", "Visualizing the grid (debug lines or mesh)."] }, { title: "Building Placement Logic", points: ["Raycasting from mouse cursor to world.", "Converting world coordinates to grid coordinates.", "Spawning and attaching building 'ghosts' (preview meshes).", "Collision detection for valid placement (overlapping buildings, terrain issues).", "Snapping buildings to the grid."] }, { title: "Basic Building Blueprints", points: ["Creating a base Blueprint class for all buildings.", "Adding static meshes and basic components.", "Implementing functions for placing, rotating, and destroying buildings."] }], project: "Develop a functional grid-based building system. The player should be able to select a building type, see a preview on the grid, and place it. Implement visual feedback for valid/invalid placement." },
+                { id: 4, title: "Resource Management", duration: 3, icon: "💰", objectives: ["Implement a resource collection and consumption system.", "Create a basic in-game economy (money, production, upkeep).", "Design UI elements for resource display."], topics: [{ title: "Data Structures for Resources", points: ["Using Structs and Data Tables for resource definitions (e.g., Wood, Stone, Food, Money).", "Defining resource costs for buildings."] }, { title: "Resource Production & Consumption", points: ["Creating buildings that produce resources over time (e.g., Sawmill produces Wood).", "Implementing buildings that consume resources (e.g., Houses consume Food).", "Tick-based resource updates."] }, { title: "UI for Resource Display (UMG)", points: ["Introduction to Unreal Motion Graphics (UMG).", "Creating a HUD (Heads-Up Display) to show current resources.", "Binding UI elements to game data."] }], project: "Integrate a resource system into the city builder. Buildings now have costs and produce/consume resources. The UI displays the current resource counts. Prevent building placement if resources are insufficient." },
+                { id: 5, title: "Citizen & AI Basics", duration: 3, icon: "🤖", objectives: ["Introduce basic AI for citizens or simulation agents.", "Implement simple needs and behaviors.", "Understand pathfinding and navigation mesh."], topics: [{ title: "AI Controller & Pawn Basics", points: ["Creating AI Controllers for citizens.", "Setting up AI Pawns (character models).", "Basic movement (e.g., random walks, moving to specific points)."] }, { title: "Navigation Mesh & Pathfinding", points: ["Generating a Nav Mesh (Recast NavMesh).", "Using AI Navigation functions (Move To Actor, Move To Location)."] }, { title: "Simple Citizen Needs & Behavior", points: ["Implementing a basic 'need' system (e.g., hunger, housing).", "Citizens moving to relevant buildings to satisfy needs.", "Basic population growth/decline based on satisfaction."] }], project: "Implement simple citizens that wander around the city, can find a path to buildings, and show basic 'satisfaction' based on available resources/housing." },
+                { id: 6, title: "Advanced Systems & Polish", duration: 3, icon: "✨", objectives: ["Implement a robust Save/Load system.", "Add more complex building functionalities.", "Refine the user experience and visual polish."], topics: [{ title: "Save/Load System", points: ["Using SaveGame Objects to store game state.", "Saving and loading buildings, resources, and citizen data.", "Serialization of complex data (e.g., arrays of structs)."] }, { title: "Advanced Building Functionality", points: ["Upgrading buildings.", "Demolition mechanics.", "Road placement system (simple or spline-based)."] }, { title: "User Experience (UX) & Polish", points: ["Creating context menus for buildings (e.g., click on a building to see its stats).", "Adding sound effects (SFX) and background music.", "Visual feedback: particles, highlights, construction animations.", "Basic main menu and pause menu."] }], project: "Develop a fully functional save/load system for your city. Implement building upgrades or a basic road network. Add sound effects and a simple main menu." },
+                { id: 7, title: "Optimization & Deployment", duration: 1, icon: "🚀", objectives: ["Understand basic optimization techniques for UE5 games.", "Learn the process of packaging a game for distribution."], topics: [{ title: "Performance Optimization", points: ["Draw calls and poly counts (Nanite/Lumen considerations).", "LODs (Level of Detail) for meshes.", "Profiling tools in Unreal Engine.", "Batching and instancing."] }, { title: "Packaging & Deployment", points: ["Project settings for packaging.", "Packaging for Windows (or target platform).", "Basic troubleshooting for packaged builds."] }], project: "Optimize your city builder prototype for better performance. Package a runnable version of your game." }
+            ],
+            resources: [
+                { title: "Unreal Engine 5", description: "The primary development environment." },
+                { title: "Blueprint Visual Scripting", description: "Will be the main scripting language." },
+                { title: "Quixel Bridge & Megascans", description: "For high-quality assets." },
+                { title: "Blender (Optional)", description: "For custom 3D modeling if you want to create unique assets." },
+                { title: "Official Unreal Engine Documentation", description: "Essential for reference." },
+                { title: "Unreal Engine Learning Portal", description: "Offers structured courses and tutorials." },
+                { title: "YouTube Channels", description: "Virtus Learning Hub, Ryan Laley, Unreal Sensei, and specific city-builder tutorials." },
+                { title: "Unreal Engine Forums & Discord", description: "For community support and problem-solving." }
+            ]
+        };
+
+        const contentArea = document.getElementById('content-area');
+        const sidebarNav = document.getElementById('sidebar-nav');
+        let durationChart = null;
+
+        function renderOverview() {
+            contentArea.innerHTML = `
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-slate-900 mb-2">Course Overview</h2>
+                    <p class="text-lg text-slate-600">A complete learning path to build a city-builder game in Unreal Engine 5.</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm mb-8">
+                    <h3 class="text-xl font-semibold text-slate-800 mb-4">Module Duration (Weeks)</h3>
+                    <div class="chart-container">
+                        <canvas id="durationChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    ${courseData.modules.map(module => `
+                        <div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer" onclick="navigateToModule(${module.id})">
+                            <div class="flex items-center mb-4">
+                                <span class="text-3xl mr-4">${module.icon}</span>
+                                <div>
+                                    <p class="text-sm font-semibold text-sky-600">Module ${module.id}</p>
+                                    <h4 class="text-lg font-bold text-slate-800">${module.title}</h4>
+                                </div>
+                            </div>
+                            <p class="text-slate-600 text-sm">${module.objectives.join(' ')}</p>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <h3 class="text-xl font-semibold text-slate-800 mb-4">Recommended Tools & Resources</h3>
+                    <ul class="space-y-3">
+                        ${courseData.resources.map(resource => `
+                            <li class="flex items-start">
+                                <span class="text-sky-500 mr-3 mt-1">✓</span>
+                                <div>
+                                    <h5 class="font-semibold text-slate-700">${resource.title}</h5>
+                                    <p class="text-slate-500 text-sm">${resource.description}</p>
+                                </div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+            renderChart();
+        }
+
+        function renderModule(moduleId) {
+            const module = courseData.modules.find(m => m.id === moduleId);
+            if (!module) {
+                renderOverview();
+                return;
+            }
+
+            contentArea.innerHTML = `
+                <div class="bg-white p-6 sm:p-8 rounded-xl shadow-sm">
+                    <div class="flex items-start mb-6">
+                        <span class="text-5xl mr-6">${module.icon}</span>
+                        <div>
+                            <p class="text-md font-semibold text-sky-600">Module ${module.id}</p>
+                            <h2 class="text-3xl font-bold text-slate-900">${module.title}</h2>
+                            <p class="text-slate-500 mt-1">${module.duration} Week Duration</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-slate-800 mb-4 border-b pb-2">Learning Objectives</h3>
+                        <ul class="list-disc list-inside space-y-2 text-slate-600">
+                            ${module.objectives.map(obj => `<li>${obj}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-slate-800 mb-4 border-b pb-2">Topics Covered</h3>
+                        <div class="space-y-4">
+                            ${module.topics.map((topic, index) => `
+                                <details class="group bg-slate-50 rounded-lg p-4" ${index === 0 ? 'open' : ''}>
+                                    <summary class="font-semibold text-slate-700 cursor-pointer list-none flex justify-between items-center">
+                                        ${topic.title}
+                                        <span class="text-slate-400 group-open:rotate-90 transition-transform duration-200">▶</span>
+                                    </summary>
+                                    <ul class="mt-3 list-disc list-inside space-y-1 text-slate-600 text-sm pl-2">
+                                        ${topic.points.map(point => `<li>${point}</li>`).join('')}
+                                    </ul>
+                                </details>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xl font-semibold text-slate-800 mb-4 border-b pb-2">Module Project</h3>
+                        <div class="bg-sky-50 text-sky-800 p-4 rounded-lg border border-sky-200">
+                            <p>${module.project}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderChart() {
+            const ctx = document.getElementById('durationChart');
+            if (!ctx) return;
+
+            if (durationChart) {
+                durationChart.destroy();
+            }
+
+            const labels = courseData.modules.map(m => `Module ${m.id}: ${m.title}`);
+            const data = courseData.modules.map(m => m.duration);
+
+            durationChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Duration in Weeks',
+                        data: data,
+                        backgroundColor: 'rgba(56, 189, 248, 0.6)',
+                        borderColor: 'rgba(14, 165, 233, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleFont: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                size: 12
+                            },
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.x !== null) {
+                                        label += context.parsed.x + ' weeks';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#e2e8f0'
+                            },
+                            ticks: {
+                                color: '#64748b'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#334155',
+                                callback: function(value, index, values) {
+                                    const label = this.getLabelForValue(value);
+                                    if (label.length > 25) {
+                                        return label.substring(0, 25) + '...';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateActiveLink(targetModule) {
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('bg-slate-100', 'text-slate-900');
+                if (link.dataset.module === targetModule) {
+                    link.classList.add('bg-slate-100', 'text-slate-900');
+                }
+            });
+        }
+
+        function navigateToModule(moduleId) {
+            const moduleStr = `module-${moduleId}`;
+            window.location.hash = moduleStr;
+            renderModule(moduleId);
+            updateActiveLink(moduleStr);
+        }
+
+        function handleNavigation() {
+            const hash = window.location.hash.substring(1);
+            if (hash.startsWith('module-')) {
+                const moduleId = parseInt(hash.split('-')[1]);
+                renderModule(moduleId);
+                updateActiveLink(hash);
+            } else {
+                renderOverview();
+                updateActiveLink('overview');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            courseData.modules.forEach(module => {
+                const link = document.createElement('a');
+                link.href = `#module-${module.id}`;
+                link.dataset.module = `module-${module.id}`;
+                link.className = 'nav-link text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium rounded-md px-3 py-2 transition-colors duration-200';
+                link.innerHTML = `<span class="mr-2">${module.icon}</span> Module ${module.id}`;
+                sidebarNav.appendChild(link);
+            });
+
+            sidebarNav.addEventListener('click', (e) => {
+                const link = e.target.closest('.nav-link');
+                if (link) {
+                    e.preventDefault();
+                    const targetModule = link.dataset.module;
+                    window.location.hash = targetModule;
+                    handleNavigation();
+                }
+            });
+
+            window.addEventListener('hashchange', handleNavigation);
+            handleNavigation();
+        });
+    </script>
+</body>
+</html>
