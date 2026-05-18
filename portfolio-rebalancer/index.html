@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full bg-slate-950">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Rebalancing & Reallocation Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts - Inter & Sarabun -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Sarabun', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for slate theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="font-sans text-slate-100 min-h-full flex flex-col bg-slate-950">
+
+<!-- Toast Notification System (Replacement for alerts) -->
+<div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
+
+<!-- Top Navigation / Header -->
+<header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="p-2 bg-indigo-600/20 text-indigo-400 rounded-lg border border-indigo-500/30">
+                <i class="fa-solid fa-chart-pie text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-emerald-400 bg-clip-text text-transparent">SmartPort</h1>
+                <p class="text-xs text-slate-400">Rebalance & Reallocate Optimizer</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <!-- Backup actions -->
+            <button onclick="exportPortfolio()" class="inline-flex items-center gap-1.5 px-3  py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 transition">
+                <i class="fa-solid fa-download"></i> <span class="hidden sm:inline">ส่งออกข้อมูล (Export)</span>
+            </button>
+            <button onclick="triggerImport()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 transition">
+                <i class="fa-solid fa-upload"></i> <span class="hidden sm:inline">นำเข้าข้อมูล (Import)</span>
+            </button>
+            <input type="file" id="import-file" class="hidden" onchange="importPortfolio(event)" accept=".json">
+        </div>
+    </div>
+</header>
+
+<main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Overview Stats Rows -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-400 font-medium">มูลค่าพอร์ตรวมทั้งหมด</p>
+                    <h3 id="stat-total-value" class="text-2xl font-bold mt-1 text-slate-100">฿0.00</h3>
+                </div>
+                <div class="p-3 bg-indigo-500/10 text-indigo-400 rounded-xl">
+                    <i class="fa-solid fa-wallet text-xl"></i>
+                </div>
+            </div>
+            <!-- Custom Portfolio Value Edit Tools -->
+            <div class="mt-4 pt-3 border-t border-slate-800/80 flex flex-col gap-2">
+                <label class="inline-flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="custom-total-toggle" onchange="toggleCustomTotal()" class="sr-only peer">
+                    <div class="relative w-7 h-4 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-600 peer-checked:after:bg-white peer-checked:after:border-white"></div>
+                    <span class="text-[10px] font-semibold text-slate-400 peer-checked:text-indigo-400 uppercase tracking-wider">กำหนดมูลค่าเป้าหมายเอง</span>
+                </label>
+                <div id="custom-total-container" class="hidden flex flex-col gap-1.5">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-xs text-slate-500">฿</span>
+                        <input type="number" id="custom-total-input" oninput="updateCustomTotalValue(this.value)" placeholder="ระบุมูลค่ารวมที่ต้องการ" class="w-full pl-6 pr-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-100 focus:ring-1 focus:ring-indigo-500 focus:outline-none transition">
+                    </div>
+                    <button onclick="scaleCurrentValuesToTarget()" class="w-full py-1 text-[10px] font-medium bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 rounded border border-indigo-500/20 transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-arrows-left-right-to-line"></i> ปรับเฉลี่ยตามสัดส่วนเดิม
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex items-center justify-between">
+            <div>
+                <p class="text-xs text-slate-400 font-medium">จำนวนสินทรัพย์</p>
+                <h3 id="stat-asset-count" class="text-2xl font-bold mt-1 text-slate-100">0 รายการ</h3>
+            </div>
+            <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl">
+                <i class="fa-solid fa-list-ol text-xl"></i>
+            </div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex items-center justify-between">
+            <div>
+                <p class="text-xs text-slate-400 font-medium">ค่าเบี่ยงเบนพอร์ตเฉลี่ย</p>
+                <h3 id="stat-avg-drift" class="text-2xl font-bold mt-1 text-amber-400">0.00%</h3>
+            </div>
+            <div class="p-3 bg-amber-500/10 text-amber-400 rounded-xl">
+                <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+            </div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex items-center justify-between">
+            <div>
+                <p class="text-xs text-slate-400 font-medium">สถานะสัดส่วนเป้าหมาย</p>
+                <h3 id="stat-target-status" class="text-lg font-bold mt-2 text-rose-400">กรุณาตั้งสัดส่วน</h3>
+            </div>
+            <div id="stat-target-icon" class="p-3 bg-rose-500/10 text-rose-400 rounded-xl">
+                <i class="fa-solid fa-circle-question text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Two Column Dashboard Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Left Side: Asset Management Form -->
+        <div class="lg:col-span-7 space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-indigo-400"></i> จัดสรรสัดส่วนสินทรัพย์
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">กรอกข้อมูลสินทรัพย์ปัจจุบัน และกำหนดสัดส่วนเป้าหมายของคุณ</p>
+                    </div>
+                    <!-- Quick Presets Dropdown -->
+                    <div class="relative w-full sm:w-auto">
+                        <select id="preset-select" onchange="applyPreset()" class="w-full sm:w-48 bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
+                            <option value="">-- เลือกพอร์ตต้นแบบ --</option>
+                            <option value="balanced">พอร์ตสมดุล (50:30:20)</option>
+                            <option value="aggressive">เน้นเติบโตเชิงรุก (70:20:10)</option>
+                            <option value="conservative">เน้นปลอดภัยปันผล (30:50:20)</option>
+                            <option value="allweather">All-Weather Model</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Asset Inputs Container -->
+                <div class="space-y-3" id="asset-inputs-list">
+                    <!-- Dynamic Rows will be injected here -->
+                </div>
+
+                <!-- Form Controls -->
+                <div class="mt-6 pt-4 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <button onclick="addAssetRow()" class="w-full sm:w-auto inline-flex justify-center items-center gap-2 px-4 py-2 text-sm font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700 transition">
+                        <i class="fa-solid fa-plus"></i> เพิ่มสินทรัพย์ใหม่
+                    </button>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <button onclick="resetToEmpty()" class="w-1/3 sm:w-auto justify-center inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-xl border border-rose-500/20 transition">
+                            <i class="fa-solid fa-trash-can"></i> รีเซ็ต
+                        </button>
+                        <button onclick="saveAndProcess()" class="w-2/3 sm:w-auto justify-center inline-flex items-center gap-2 px-6 py-2 text-sm font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-600/20 transition">
+                            <i class="fa-solid fa-floppy-disk"></i> คำนวณและบันทึก
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic DCA / Portfolio Injection Tool -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <div>
+                    <h2 class="text-lg font-semibold text-slate-100 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-dollar-to-slot text-emerald-400"></i> DCA Sandbox (จำลองเติมเงินใหม่)
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">คำนวณสัดส่วนที่จะเอาเงินใหม่ไปช้อนซื้อ เพื่อปรับพอร์ตให้สมดุลโดยไม่ต้องขายหุ้นเดิม</p>
+                </div>
+                <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">จำนวนเงินสดที่จะเติมเพิ่มวันนี้ (บาท)</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                                <span>฿</span>
+                            </div>
+                            <input type="number" id="dca-amount" placeholder="ระบุตัวเลข เช่น 10000" class="w-full pl-8 pr-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+                        </div>
+                    </div>
+                    <div>
+                        <button onclick="calculateDCAPlan()" class="w-full inline-flex justify-center items-center gap-2 px-4 py-2.5 text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-lg shadow-emerald-600/20 transition">
+                            <i class="fa-solid fa-calculator"></i> คำนวณ DCA
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Simulation Result Table -->
+                <div id="dca-results-card" class="mt-5 hidden bg-slate-950/50 border border-slate-850 rounded-xl p-4">
+                    <h3 class="text-xs font-semibold uppercase text-emerald-400 tracking-wider mb-3 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-info"></i> คำสั่งแนะนำกระจายเงิน DCA
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead>
+                                <tr class="border-b border-slate-800 text-slate-400">
+                                    <th class="py-2">สินทรัพย์</th>
+                                    <th class="py-2 text-right">จำนวนซื้อเพิ่ม</th>
+                                    <th class="py-2 text-right">พอร์ตจำลองใหม่ (บาท)</th>
+                                    <th class="py-2 text-right">สัดส่วนจำลองใหม่ (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dca-results-table">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Visualization and Analysis -->
+        <div class="lg:col-span-5 space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between h-full">
+                <div>
+                    <h2 class="text-lg font-semibold text-slate-100 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-simple text-indigo-400"></i> เปรียบเทียบสัดส่วนพอร์ต
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">เปรียบเทียบสัดส่วนปัจจุบัน (Current) กับสัดส่วนเป้าหมาย (Target)</p>
+                </div>
+                
+                <!-- Chart Container -->
+                <div class="relative my-8 flex items-center justify-center min-h-[320px]">
+                    <div id="no-chart-state" class="absolute flex flex-col items-center justify-center text-center p-6 text-slate-500">
+                        <i class="fa-solid fa-chart-column text-5xl mb-3 text-slate-700"></i>
+                        <p class="text-sm font-medium">ไม่มีข้อมูลแสดงผล</p>
+                        <p class="text-xs mt-1">กรุณากรอกและบันทึกข้อมูลสินทรัพย์ด้านซ้ายก่อน</p>
+                    </div>
+                    <canvas id="comparisonChart" class="max-w-full h-auto hidden"></canvas>
+                </div>
+
+                <!-- Quick Help / Legend -->
+                <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4 mt-auto">
+                    <h4 class="text-xs font-semibold text-slate-300 mb-1">💡 หลักการ Rebalancing</h4>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        ระบบจะคำนวณว่าสัดส่วนเบี่ยงเบนจากเป้าหมายกี่ % โดยแนะนำให้ขายตัวที่สัดส่วนโตเกินเป้า (Overweight) และเอาเงินที่ได้ไปซื้อตัวที่สัดส่วนลดลง (Underweight) เพื่อรักษาความเสี่ยงให้อยู่ในกรอบเสมอ
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Rebalancing Action Matrix -->
+    <div class="mt-8 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div>
+                <h2 class="text-lg font-semibold text-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-clipboard-list text-indigo-400"></i> รายการคำนวณและคำสั่งที่ต้องดำเนินการ (Action Plan)
+                </h2>
+                <p class="text-xs text-slate-400 mt-1">ข้อมูลวิเคราะห์ระดับรายสินทรัพย์พร้อมทางเลือกการขายและปรับตำแหน่งพอร์ต</p>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-slate-800">
+            <table class="w-full text-left text-sm text-slate-300">
+                <thead class="bg-slate-950 text-slate-400 text-xs font-semibold uppercase tracking-wider border-b border-slate-800">
+                    <tr>
+                        <th class="py-4 px-6">ชื่อสินทรัพย์</th>
+                        <th class="py-4 px-6 text-right">มูลค่าปัจจุบัน</th>
+                        <th class="py-4 px-6 text-right">สัดส่วนปัจจุบัน</th>
+                        <th class="py-4 px-6 text-right">สัดส่วนเป้าหมาย</th>
+                        <th class="py-4 px-6 text-right">มูลค่าเป้าหมาย</th>
+                        <th class="py-4 px-6 text-right">ระยะต่างสัดส่วน (Drift)</th>
+                        <th class="py-4 px-6 text-center">คำสั่งดำเนินการ (Action Required)</th>
+                    </tr>
+                </thead>
+                <tbody id="rebalance-main-table" class="divide-y divide-slate-800">
+                    <!-- Dynamic Rows populated by Javascript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<footer class="border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4">
+        <p>© 2026 SmartPort - เครื่องมือจำลองและคำนวณสมดุลพอร์ตเพื่อช่วยตัดสินใจลงทุน</p>
+        <p class="mt-1 text-slate-600">หมายเหตุ: ข้อมูลทั้งหมดถูกประมวลผลบนบราวเซอร์ของคุณเท่านั้น ไม่ถูกอัปโหลดขึ้นฝั่งเซิร์ฟเวอร์</p>
+    </div>
+</footer>
+
+<script>
+    // State management
+    let portfolio = [];
+    let comparisonChartInstance = null;
+    let isCustomTotalActive = false;
+    let customTotalValue = 0;
+
+    // Presets definitions
+    const PRESETS = {
+        balanced: [
+            { name: 'ตราสารหนี้/เงินฝาก', value: 20000, target: 20 },
+            { name: 'หุ้นปันผลพื้นฐาน', value: 30000, target: 30 },
+            { name: 'หุ้นเติบโตหลัก', value: 50000, target: 50 }
+        ],
+        aggressive: [
+            { name: 'หุ้นเทคโนโลยีเติบโตสูง', value: 40000, target: 40 },
+            { name: 'หุ้นขนาดกลาง-เล็ก', value: 30000, target: 30 },
+            { name: 'สินทรัพย์ทางเลือก', value: 20000, target: 20 },
+            { name: 'เงินสดพักพอร์ต', value: 10000, target: 10 }
+        ],
+        conservative: [
+            { name: 'ตราสารหนี้/หุ้นกู้เกรดดี', value: 50000, target: 50 },
+            { name: 'หุ้นปันผลเด่น', value: 30000, target: 30 },
+            { name: 'หุ้นตลาดเกิดใหม่', value: 10000, target: 10 },
+            { name: 'เงินสด', value: 10000, target: 10 }
+        ],
+        allweather: [
+            { name: 'หุ้นทุนขนาดใหญ่', value: 30000, target: 30 },
+            { name: 'ตราสารหนี้ระยะยาว', value: 40000, target: 40 },
+            { name: 'ตราสารหนี้ระยะกลาง', value: 15000, target: 15 },
+            { name: 'ทองคำแท่ง', value: 7500, target: 7.5 },
+            { name: 'สินค้าโภคภัณฑ์', value: 7500, target: 7.5 }
+        ]
+    };
+
+    // Color definitions for charts
+    const CHART_COLORS = [
+        '#6366f1', '#10b981', '#f59e0b', '#ec4899', '#3b82f6', 
+        '#8b5cf6', '#14b8a6', '#ef4444', '#06b6d4', '#f43f5e'
+    ];
+
+    // Helper to generate IDs
+    function uuidv4() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    // Toast notifications utility
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `flex items-center gap-2.5 px-4 py-3 rounded-xl border text-sm font-medium shadow-lg transition duration-300 transform translate-y-2 opacity-0 scale-95`;
+        
+        let icon = '<i class="fa-solid fa-circle-info"></i>';
+        if (type === 'success') {
+            toast.className += ' bg-emerald-950/90 border-emerald-500/30 text-emerald-400';
+            icon = '<i class="fa-solid fa-circle-check"></i>';
+        } else if (type === 'danger') {
+            toast.className += ' bg-rose-950/90 border-rose-500/30 text-rose-400';
+            icon = '<i class="fa-solid fa-circle-exclamation"></i>';
+        } else if (type === 'warning') {
+            toast.className += ' bg-amber-950/90 border-amber-500/30 text-amber-400';
+            icon = '<i class="fa-solid fa-triangle-exclamation"></i>';
+        } else {
+            toast.className += ' bg-slate-900/90 border-slate-700 text-slate-300';
+        }
+
+        toast.innerHTML = `${icon} <span>${message}</span>`;
+        container.appendChild(toast);
+        
+        // Trigger Animation
+        setTimeout(() => {
+            toast.classList.remove('translate-y-2', 'opacity-0', 'scale-95');
+        }, 50);
+
+        // Remove after 3 seconds
+        setTimeout(() => {
+            toast.classList.add('translate-y-2', 'opacity-0', 'scale-95');
+            setTimeout(() => toast.remove(), 300);
+        }, 3500);
+    }
+
+    // Initial load
+    window.onload = function() {
+        const saved = localStorage.getItem('smartport_portfolio');
+        if (saved) {
+            try {
+                portfolio = JSON.parse(saved);
+            } catch (e) {
+                portfolio = getDemoData();
+            }
+        } else {
+            portfolio = getDemoData();
+        }
+        
+        // Ensure all items have ID
+        portfolio.forEach(item => {
+            if (!item.id) item.id = uuidv4();
+        });
+
+        // Load custom total state
+        isCustomTotalActive = localStorage.getItem('smartport_custom_total_active') === 'true';
+        customTotalValue = parseFloat(localStorage.getItem('smartport_custom_total_value')) || 0;
+
+        const toggleInput = document.getElementById('custom-total-toggle');
+        const customContainer = document.getElementById('custom-total-container');
+        const customInput = document.getElementById('custom-total-input');
+        
+        if (toggleInput) toggleInput.checked = isCustomTotalActive;
+        if (customContainer && isCustomTotalActive) customContainer.classList.remove('hidden');
+        if (customInput && customTotalValue > 0) customInput.value = customTotalValue;
+
+        renderInputs();
+        calculateAndRender();
+        showToast("โหลดข้อมูลสำเร็จ", "success");
+    }
+
+    // Default template data
+    function getDemoData() {
+        return [
+            { id: uuidv4(), name: 'หุ้นเติบโตหลัก (Growth)', value: 55000, target: 50 },
+            { id: uuidv4(), name: 'หุ้นปันผลเสถียร (Dividend)', value: 38000, target: 30 },
+            { id: uuidv4(), name: 'กองทุนต่างประเทศ (Global ETF)', value: 12000, target: 20 }
+        ];
+    }
+
+    // Render asset input list dynamically
+    function renderInputs() {
+        const container = document.getElementById('asset-inputs-list');
+        container.innerHTML = '';
+
+        if (portfolio.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-6 text-slate-500 border border-dashed border-slate-800 rounded-xl">
+                    <p class="text-sm">พอร์ตว่างเปล่ากรุณากดปุ่มด้านล่างเพื่อเพิ่มหุ้นของคุณ</p>
+                </div>
+            `;
+            return;
+        }
+
+        portfolio.forEach((asset, idx) => {
+            const row = document.createElement('div');
+            row.className = 'grid grid-cols-1 sm:grid-cols-12 gap-2 p-3 bg-slate-950 border border-slate-800 rounded-xl items-center relative group';
+            row.innerHTML = `
+                <div class="sm:col-span-5">
+                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5 sm:hidden">ชื่อหุ้น / สินทรัพย์</label>
+                    <input type="text" value="${asset.name}" oninput="updateAssetState('${asset.id}', 'name', this.value)" placeholder="เช่น PTT, AAPL, เงินฝาก" class="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 focus:outline-none text-sm text-slate-200 rounded-lg px-3 py-1.5 transition">
+                </div>
+                <div class="sm:col-span-3">
+                    <label class="block text-[10px] font-semibold text-slate-500 mb-0.5 sm:hidden">มูลค่าตลาดปัจจุบัน (บาท)</label>
+                    <input type="number" min="0" value="${asset.value}" oninput="updateAssetState('${asset.id}', 'value', this.value)" placeholder="จำนวนเงิน" class="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 focus:outline-none text-sm text-slate-200 text-right rounded-lg px-3 py-1.5 transition">
+                </div>
+                <div class="sm:col-span-3 flex items-center gap-1.5">
+                    <div class="w-full">
+                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5 sm:hidden">สัดส่วนเป้าหมาย (%)</label>
+                        <div class="relative">
+                            <input type="number" min="0" max="100" value="${asset.target}" oninput="updateAssetState('${asset.id}', 'target', this.value)" placeholder="0" class="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 focus:outline-none text-sm text-slate-200 text-right pr-6 rounded-lg px-3 py-1.5 transition">
+                            <span class="absolute inset-y-0 right-2 flex items-center text-xs text-slate-500">%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="sm:col-span-1 flex justify-end">
+                    <button onclick="removeAssetRow('${asset.id}')" class="p-2 text-rose-500 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/10 rounded-lg transition" title="ลบรายการนี้">
+                        <i class="fa-solid fa-trash text-xs"></i>
+                    </button>
+                </div>
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    // Add and Remove assets logic
+    function addAssetRow() {
+        portfolio.push({
+            id: uuidv4(),
+            name: '',
+            value: 0,
+            target: 0
+        });
+        renderInputs();
+    }
+
+    function removeAssetRow(id) {
+        portfolio = portfolio.filter(item => item.id !== id);
+        renderInputs();
+        saveAndProcess(false); // Process recalculations silently
+    }
+
+    // Reset current portfolio
+    function resetToEmpty() {
+        portfolio = [];
+        renderInputs();
+        saveAndProcess(false);
+        showToast("รีเซ็ตพอร์ตเป็นพอร์ตว่างแล้ว", "warning");
+    }
+
+    // Update in-memory state
+    function updateAssetState(id, field, value) {
+        const item = portfolio.find(p => p.id === id);
+        if (item) {
+            if (field === 'value') {
+                item.value = value === '' ? 0 : Math.max(0, parseFloat(value));
+            } else if (field === 'target') {
+                item.target = value === '' ? 0 : Math.max(0, Math.min(100, parseFloat(value)));
+            } else {
+                item.name = value;
+            }
+        }
+    }
+
+    // Toggle manual/automatic portfolio value calculation
+    function toggleCustomTotal() {
+        const toggleInput = document.getElementById('custom-total-toggle');
+        const customContainer = document.getElementById('custom-total-container');
+        
+        isCustomTotalActive = toggleInput.checked;
+        localStorage.setItem('smartport_custom_total_active', isCustomTotalActive);
+        
+        if (isCustomTotalActive) {
+            customContainer.classList.remove('hidden');
+        } else {
+            customContainer.classList.add('hidden');
+        }
+        calculateAndRender();
+    }
+
+    // Update the custom total value in state and persist
+    function updateCustomTotalValue(val) {
+        customTotalValue = val === '' ? 0 : Math.max(0, parseFloat(val));
+        localStorage.setItem('smartport_custom_total_value', customTotalValue);
+        calculateAndRender();
+    }
+
+    // Proportionally scale the current portfolio asset values to match the custom target total
+    function scaleCurrentValuesToTarget() {
+        if (!isCustomTotalActive || customTotalValue <= 0) {
+            showToast("กรุณาเปิดใช้งานและกำหนดมูลค่าเป้าหมายก่อนทำการปรับสัดส่วน", "warning");
+            return;
+        }
+        const totalValue = portfolio.reduce((sum, item) => sum + item.value, 0);
+        if (totalValue === 0) {
+            // Distribute based on target percentages if portfolio is currently empty
+            portfolio.forEach(item => {
+                item.value = Math.round((item.target / 100) * customTotalValue);
+            });
+        } else {
+            const ratio = customTotalValue / totalValue;
+            portfolio.forEach(item => {
+                item.value = Math.round(item.value * ratio);
+            });
+        }
+        renderInputs();
+        saveAndProcess(false);
+        showToast("ปรับเฉลี่ยมูลค่าของสินทรัพย์ปัจจุบันเรียบร้อยแล้ว", "success");
+    }
+
+    // Trigger explicit save and process
+    function saveAndProcess(interactive = true) {
+        // Validation of targets
+        const totalTarget = portfolio.reduce((sum, item) => sum + item.target, 0);
+        
+        localStorage.setItem('smartport_portfolio', JSON.stringify(portfolio));
+        calculateAndRender();
+
+        if (interactive) {
+            if (totalTarget !== 100 && portfolio.length > 0) {
+                showToast(`สัดส่วนเป้าหมายรวมกันได้ ${totalTarget}% แนะนำให้ปรับแต่งให้ครบ 100% เพื่อความแม่นยำ`, "warning");
+            } else {
+                showToast("บันทึกสัดส่วนพอร์ตและประมวลผลการ Rebalance สำเร็จ", "success");
+            }
+        }
+    }
+
+    // Apply portfolio presets
+    function applyPreset() {
+        const presetKey = document.getElementById('preset-select').value;
+        if (!presetKey || !PRESETS[presetKey]) return;
+
+        portfolio = PRESETS[presetKey].map(item => ({
+            id: uuidv4(),
+            name: item.name,
+            value: item.value,
+            target: item.target
+        }));
+
+        renderInputs();
+        saveAndProcess();
+        document.getElementById('preset-select').value = ""; // clear dropdown selection
+    }
+
+    // Core engine math & Rendering results
+    function calculateAndRender() {
+        const totalValue = portfolio.reduce((sum, item) => sum + item.value, 0);
+        const totalTarget = portfolio.reduce((sum, item) => sum + item.target, 0);
+        
+        // Determine base total to use for Target allocation planning
+        const baseTotalForTarget = (isCustomTotalActive && customTotalValue > 0) ? customTotalValue : totalValue;
+
+        // Update stats top panels
+        if (isCustomTotalActive && customTotalValue > 0) {
+            document.getElementById('stat-total-value').innerHTML = `
+                <span class="text-2xl font-bold text-slate-100">฿${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <div class="text-[10px] text-indigo-400 mt-0.5 font-semibold flex items-center gap-1">
+                    <i class="fa-solid fa-bullseye text-[8px]"></i> วางแผนเป้าหมาย: ฿${customTotalValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                </div>
+            `;
+        } else {
+            document.getElementById('stat-total-value').innerText = `฿${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        document.getElementById('stat-asset-count').innerText = `${portfolio.length} รายการ`;
+
+        // Calculate Average Drift
+        let totalDrift = 0;
+        portfolio.forEach(item => {
+            const currentPct = totalValue > 0 ? (item.value / totalValue) * 100 : 0;
+            totalDrift += Math.abs(currentPct - item.target);
+        });
+        const avgDrift = portfolio.length > 0 ? (totalDrift / portfolio.length) : 0;
+        
+        const driftElem = document.getElementById('stat-avg-drift');
+        driftElem.innerText = `${avgDrift.toFixed(2)}%`;
+        if (avgDrift > 10) {
+            driftElem.className = "text-2xl font-bold mt-1 text-rose-500";
+        } else if (avgDrift > 5) {
+            driftElem.className = "text-2xl font-bold mt-1 text-amber-500";
+        } else {
+            driftElem.className = "text-2xl font-bold mt-1 text-emerald-500";
+        }
+
+        // Target Status Config
+        const statusText = document.getElementById('stat-target-status');
+        const statusIcon = document.getElementById('stat-target-icon');
+        if (totalTarget === 100) {
+            statusText.innerText = "ครบ 100% พอดี";
+            statusText.className = "text-lg font-bold mt-2 text-emerald-400";
+            statusIcon.className = "p-3 bg-emerald-500/10 text-emerald-400 rounded-xl";
+            statusIcon.innerHTML = '<i class="fa-solid fa-circle-check text-xl"></i>';
+        } else if (totalTarget === 0) {
+            statusText.innerText = "ยังไม่มีสัดส่วน";
+            statusText.className = "text-lg font-bold mt-2 text-slate-500";
+            statusIcon.className = "p-3 bg-slate-800 text-slate-400 rounded-xl";
+            statusIcon.innerHTML = '<i class="fa-solid fa-circle-minus text-xl"></i>';
+        } else {
+            statusText.innerText = `${totalTarget}% (ไม่ครบ 100)`;
+            statusText.className = "text-lg font-bold mt-2 text-rose-400";
+            statusIcon.className = "p-3 bg-rose-500/10 text-rose-400 rounded-xl";
+            statusIcon.innerHTML = '<i class="fa-solid fa-circle-exclamation text-xl"></i>';
+        }
+
+        // Render Action table
+        const tbody = document.getElementById('rebalance-main-table');
+        tbody.innerHTML = '';
+
+        if (portfolio.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="py-12 text-center text-slate-500">
+                        <i class="fa-solid fa-folder-open text-4xl mb-2 block"></i>
+                        ไม่มีข้อมูลสำหรับการวางแผน Rebalancing
+                    </td>
+                </tr>
+            `;
+            updateChart([], []);
+            return;
+        }
+
+        portfolio.forEach(item => {
+            const currentPct = totalValue > 0 ? (item.value / totalValue) * 100 : 0;
+            // Calculating targeted allocation relative to customized or actual total value
+            const targetValue = (item.target / 100) * baseTotalForTarget;
+            const diffValue = targetValue - item.value;
+            const driftPct = currentPct - item.target;
+
+            let actionBadge = '';
+            if (diffValue > 1) {
+                actionBadge = `
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-semibold text-xs">
+                        <i class="fa-solid fa-circle-up text-[10px]"></i> ซื้อเพิ่ม ฿${Math.round(diffValue).toLocaleString()}
+                    </div>
+                `;
+            } else if (diffValue < -1) {
+                actionBadge = `
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 font-semibold text-xs">
+                        <i class="fa-solid fa-circle-down text-[10px]"></i> ขายออก ฿${Math.round(Math.abs(diffValue)).toLocaleString()}
+                    </div>
+                `;
+            } else {
+                actionBadge = `
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-400 font-medium text-xs">
+                        <i class="fa-solid fa-check text-[10px]"></i> สมดุลแล้ว (Hold)
+                    </div>
+                `;
+            }
+
+            // Formatting drifts with green/red indicator
+            const driftIndicator = driftPct > 0 
+                ? `<span class="text-rose-400 font-medium">+${driftPct.toFixed(1)}%</span>` 
+                : driftPct < 0 
+                    ? `<span class="text-emerald-400 font-medium">${driftPct.toFixed(1)}%</span>` 
+                    : `<span class="text-slate-500">0.0%</span>`;
+
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-slate-900/50 transition";
+            tr.innerHTML = `
+                <td class="py-4 px-6 font-semibold text-slate-200">${item.name || 'ไม่ได้ระบุชื่อ'}</td>
+                <td class="py-4 px-6 text-right text-slate-300 font-mono">฿${item.value.toLocaleString()}</td>
+                <td class="py-4 px-6 text-right text-slate-300 font-mono">${currentPct.toFixed(1)}%</td>
+                <td class="py-4 px-6 text-right text-slate-400 font-mono">${item.target}%</td>
+                <td class="py-4 px-6 text-right text-slate-300 font-mono">฿${Math.round(targetValue).toLocaleString()}</td>
+                <td class="py-4 px-6 text-right font-mono">${driftIndicator}</td>
+                <td class="py-4 px-6 text-center">${actionBadge}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Sync visual comparisons chart
+        const chartLabels = portfolio.map(item => item.name || 'ไม่ระบุชื่อ');
+        const currentData = portfolio.map(item => totalValue > 0 ? (item.value / totalValue) * 100 : 0);
+        const targetData = portfolio.map(item => item.target);
+
+        updateChart(chartLabels, currentData, targetData);
+    }
+
+    // Dynamic DCA Cash Solver
+    function calculateDCAPlan() {
+        const cashInflow = parseFloat(document.getElementById('dca-amount').value);
+        if (isNaN(cashInflow) || cashInflow <= 0) {
+            showToast("กรุณากรอกจำนวนเงิน DCA ใหม่ให้ถูกต้อง", "danger");
+            return;
+        }
+
+        const totalValue = portfolio.reduce((sum, item) => sum + item.value, 0);
+        const totalTarget = portfolio.reduce((sum, item) => sum + item.target, 0);
+
+        if (totalTarget !== 100) {
+            showToast("ไม่สามารถประมวลแผน DCA ได้เนื่องจากสัดส่วนเป้าหมายพอร์ตทั้งหมดไม่เท่ากับ 100%", "danger");
+            return;
+        }
+
+        const newTotalValue = totalValue + cashInflow;
+        
+        // Dynamic water-filling reallocation for 'No-Sell' DCA optimization
+        // Identify deficits to reach goal without selling.
+        let candidates = portfolio.map(item => {
+            const desiredValue = (item.target / 100) * newTotalValue;
+            const deficit = desiredValue - item.value;
+            return {
+                ...item,
+                desiredValue,
+                deficit: deficit > 0 ? deficit : 0
+            };
+        });
+
+        const totalDeficit = candidates.reduce((sum, item) => sum + item.deficit, 0);
+        let allocations = {};
+
+        if (totalDeficit > 0) {
+            // Allocate proportionally to the deficits
+            candidates.forEach(item => {
+                if (item.deficit > 0) {
+                    const ratio = item.deficit / totalDeficit;
+                    allocations[item.id] = ratio * cashInflow;
+                } else {
+                    allocations[item.id] = 0;
+                }
+            });
+        } else {
+            // If there's no overall deficits relative to target percentages, distribute according to original ratios
+            candidates.forEach(item => {
+                allocations[item.id] = (item.target / 100) * cashInflow;
+            });
+        }
+
+        // Render simulation results
+        const dcaTbody = document.getElementById('dca-results-table');
+        dcaTbody.innerHTML = '';
+        
+        portfolio.forEach(item => {
+            const addedCash = allocations[item.id] || 0;
+            const simulatedNewValue = item.value + addedCash;
+            const simulatedPct = (simulatedNewValue / newTotalValue) * 100;
+
+            const tr = document.createElement('tr');
+            tr.className = "border-b border-slate-900 last:border-0";
+            tr.innerHTML = `
+                <td class="py-2.5 font-medium text-slate-300">${item.name || 'ไม่ระบุชื่อ'}</td>
+                <td class="py-2.5 text-right font-semibold text-emerald-400 font-mono">+฿${Math.round(addedCash).toLocaleString()}</td>
+                <td class="py-2.5 text-right text-slate-400 font-mono">฿${Math.round(simulatedNewValue).toLocaleString()}</td>
+                <td class="py-2.5 text-right text-slate-300 font-mono">${simulatedPct.toFixed(1)}% <span class="text-slate-500 text-[10px]">(${item.target}%)</span></td>
+            `;
+            dcaTbody.appendChild(tr);
+        });
+
+        document.getElementById('dca-results-card').classList.remove('hidden');
+        showToast("คำนวณสัดส่วน DCA สำเร็จ ตรวจสอบผลลัพธ์ในกรอบสีเขียว", "success");
+    }
+
+    // Chart.js render engine
+    function updateChart(labels, currentData, targetData) {
+        const ctx = document.getElementById('comparisonChart');
+        const emptyState = document.getElementById('no-chart-state');
+
+        if (portfolio.length === 0) {
+            ctx.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+            return;
+        }
+
+        ctx.classList.remove('hidden');
+        emptyState.classList.add('hidden');
+
+        if (comparisonChartInstance) {
+            comparisonChartInstance.destroy();
+        }
+
+        comparisonChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'สัดส่วนปัจจุบัน (Current %)',
+                        data: currentData,
+                        backgroundColor: 'rgba(99, 102, 241, 0.7)',
+                        borderColor: '#6366f1',
+                        borderWidth: 1.5,
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'เป้าหมาย (Target %)',
+                        data: targetData,
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderColor: '#10b981',
+                        borderWidth: 1.5,
+                        borderRadius: 6,
+                        borderDash: [3, 3]
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#cbd5e1',
+                            font: { family: 'Inter', size: 11 }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.raw.toFixed(1)}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#94a3b8', font: { family: 'Sarabun' } },
+                        grid: { color: '#1e293b' }
+                    },
+                    y: {
+                        ticks: { color: '#94a3b8', font: { family: 'Inter' } },
+                        grid: { color: '#1e293b' },
+                        suggestedMax: 100
+                    }
+                }
+            }
+        });
+    }
+
+    // Export backup database as JSON
+    function exportPortfolio() {
+        if (portfolio.length === 0) {
+            showToast("ไม่มีข้อมูลให้ออกรายงานสำรองข้อมูล", "danger");
+            return;
+        }
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(portfolio));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `SmartPort_Backup_${new Date().toISOString().slice(0,10)}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+        showToast("ดาวน์โหลดไฟล์สำรองข้อมูลสำเร็จ", "success");
+    }
+
+    // Trigger import action hidden input
+    function triggerImport() {
+        document.getElementById('import-file').click();
+    }
+
+    // Process file imports
+    function importPortfolio(event) {
+        const fileReader = new FileReader();
+        fileReader.onload = function(e) {
+            try {
+                const parsed = JSON.parse(e.target.result);
+                if (Array.isArray(parsed)) {
+                    // Check schema lightly
+                    const valid = parsed.every(item => item.hasOwnProperty('name') && item.hasOwnProperty('value') && item.hasOwnProperty('target'));
+                    if (valid) {
+                        portfolio = parsed.map(item => ({
+                            id: item.id || uuidv4(),
+                            name: item.name,
+                            value: Number(item.value) || 0,
+                            target: Number(item.target) || 0
+                        }));
+                        renderInputs();
+                        saveAndProcess();
+                        showToast("นำเข้าข้อมูลสัดส่วนพอร์ตเรียบร้อยแล้ว", "success");
+                    } else {
+                        showToast("โครงสร้างข้อมูลในไฟล์ไม่ถูกต้องตามที่กำหนด", "danger");
+                    }
+                } else {
+                    showToast("รูปแบบไฟล์สำรองไม่เข้าเกณฑ์พอร์ตการลงทุน", "danger");
+                }
+            } catch (err) {
+                showToast("พบข้อผิดพลาดขณะอ่านและประมวลผลไฟล์", "danger");
+            }
+        };
+        fileReader.readAsText(event.target.files[0]);
+        // Reset file input value to allow uploading same file again
+        event.target.value = '';
+    }
+</script>
+
+</body>
+</html>
