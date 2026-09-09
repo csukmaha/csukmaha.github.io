@@ -10,12 +10,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Chosen Palette: "Tech Learn Palette" - A combination of slate grays for a professional feel, with a sky blue accent for interactive elements and highlights. -->
-    <!-- Application Structure Plan: The SPA is designed with a fixed sidebar for module navigation and a dynamic main content area. This structure provides a persistent, clear navigation path, allowing users to easily jump between modules without losing context, which is superior to scrolling through a long document. The initial view is a dashboard-style overview with cards for each module, giving a comprehensive summary of the learning journey. This non-linear approach enhances usability for learners who may wish to review or preview different sections of the course at will. -->
+    <!-- Application Structure Plan: The SPA is designed with a fixed sidebar for module navigation and a dynamic main content area. This structure provides a persistent, clear navigation path, allowing learners to explore course content methodically. -->
     <!-- Visualization & Content Choices: 
-        - Course Overview: Report Info -> Full course structure. Goal -> Organize/Inform. Viz/Method -> A grid of interactive cards, one for each module. Interaction -> Clicking a card navigates to that module's detailed view. Justification -> Provides a high-level, visually appealing summary of the entire course, encouraging exploration. Library/Method -> HTML/CSS with Tailwind.
-        - Module Duration Comparison: Report Info -> Duration of each module in weeks. Goal -> Compare. Viz/Method -> A horizontal bar chart. Interaction -> Tooltips on hover display the exact duration. Justification -> Offers a quick, scannable visual comparison of the time commitment required for each module, aiding in planning. Library/Method -> Chart.js (Canvas).
-        - Module Details (Objectives, Topics, Project): Report Info -> Detailed text content for each module. Goal -> Inform. Viz/Method -> Accordion-style collapsible sections for each topic. Interaction -> Clicking a topic header expands to show details. Justification -> Manages information density, preventing user overload by presenting detailed content on demand. Library/Method -> HTML/CSS/JS.
-        - Recommended Resources: Report Info -> List of tools and links. Goal -> Inform. Viz/Method -> A styled list within a distinct card. Interaction -> Static display. Justification -> Consolidates all necessary resources into an easily accessible and readable format. Library/Method -> HTML/CSS with Tailwind.
+        - Course Overview: Report Info -> Full course structure. Goal -> Organize/Inform. Viz/Method -> A grid of interactive cards, one for each module. Interaction -> Clicking a card navigates to the detailed module view.
+        - Module Duration Comparison: Report Info -> Duration of each module in weeks. Goal -> Compare. Viz/Method -> A horizontal bar chart. Interaction -> Tooltips on hover display the exact duration.
+        - Module Details (Objectives, Topics, Project): Report Info -> Detailed text content for each module. Goal -> Inform. Viz/Method -> Accordion-style collapsible sections for each topic. Interaction -> Click to expand/collapse.
+        - Recommended Resources: Report Info -> List of tools and links. Goal -> Inform. Viz/Method -> A styled list within a distinct card. Interaction -> Static display. Justification -> Consolidate external references in one place.
     -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
@@ -70,13 +70,363 @@
     <script>
         const courseData = {
             modules: [
-                { id: 1, title: "UE5 Fundamentals", duration: 2, icon: "🛠️", objectives: ["Understand the Unreal Engine 5 interface and navigation.", "Master basic asset import and management.", "Learn the fundamentals of Blueprints visual scripting.", "Familiarize with Actors, Components, and basic level design."], topics: [{ title: "Introduction to Unreal Engine 5", points: ["Installation and Epic Games Launcher.", "Creating new projects (Game Template: Blank/Third Person).", "Overview of the Unreal Editor UI: Viewport, Content Browser, Details Panel, World Outliner.", "Basic navigation (WASD, Mouse, Orbiting)."] }, { title: "Asset Pipeline & Content Management", points: ["Importing static meshes, textures, and basic materials.", "Using Quixel Bridge for Megascans assets.", "Organizing content in the Content Browser."] }, { title: "Blueprints Visual Scripting Basics", points: ["What are Blueprints? (Event Graph, Construction Script, Components).", "Creating Actors and Actor Blueprints.", "Variables, Data Types, and Basic Flow Control (Branch, Sequence, Loop).", "Event-driven programming (Event BeginPlay, Tick)."] }, { title: "Basic Level Design", points: ["Placing and manipulating Actors in the world.", "Transformations (Location, Rotation, Scale).", "Introduction to basic lighting (Directional Light, Sky Light).", "Building simple environments with primitive shapes."] }], project: "Create a small, interactive scene where a player character can walk around a basic environment with some static objects. Implement a simple interaction using Blueprints (e.g., press a key to change an object's color)." },
-                { id: 2, title: "World Building & Camera", duration: 2, icon: "🌍", objectives: ["Develop skills in creating large-scale landscapes.", "Implement a city-builder specific camera system.", "Understand basic lighting and atmosphere for an open world."], topics: [{ title: "Landscape & Terrain Tools", points: ["Creating and sculpting terrains.", "Painting landscape materials (layers, blend types).", "Using foliage tools for vegetation placement (trees, grass).", "Introduction to World Partition for large worlds."] }, { title: "City Builder Camera System", points: ["Creating a custom Player Controller.", "Implementing top-down camera movement (pan, zoom, rotate).", "Camera collision and bounds.", "Mouse input for camera control."] }, { title: "Atmosphere & Lighting", points: ["Sky Atmosphere, Volumetric Clouds.", "Post-Processing Volume for visual effects (color grading, bloom, depth of field).", "Working with Lumen for dynamic global illumination."] }], project: "Build a large, detailed landscape suitable for a city. Implement a fully functional top-down camera system similar to popular city builders." },
-                { id: 3, title: "Placement & Grid Systems", duration: 3, icon: "🏗️", objectives: ["Design and implement a grid-based building system.", "Create dynamic placement previews.", "Manage building states (valid/invalid placement)."], topics: [{ title: "Grid System Implementation", points: ["Creating a grid manager Blueprint (e.g., a custom Actor Component or Game Mode).", "Defining grid cell size and coordinates.", "Visualizing the grid (debug lines or mesh)."] }, { title: "Building Placement Logic", points: ["Raycasting from mouse cursor to world.", "Converting world coordinates to grid coordinates.", "Spawning and attaching building 'ghosts' (preview meshes).", "Collision detection for valid placement (overlapping buildings, terrain issues).", "Snapping buildings to the grid."] }, { title: "Basic Building Blueprints", points: ["Creating a base Blueprint class for all buildings.", "Adding static meshes and basic components.", "Implementing functions for placing, rotating, and destroying buildings."] }], project: "Develop a functional grid-based building system. The player should be able to select a building type, see a preview on the grid, and place it. Implement visual feedback for valid/invalid placement." },
-                { id: 4, title: "Resource Management", duration: 3, icon: "💰", objectives: ["Implement a resource collection and consumption system.", "Create a basic in-game economy (money, production, upkeep).", "Design UI elements for resource display."], topics: [{ title: "Data Structures for Resources", points: ["Using Structs and Data Tables for resource definitions (e.g., Wood, Stone, Food, Money).", "Defining resource costs for buildings."] }, { title: "Resource Production & Consumption", points: ["Creating buildings that produce resources over time (e.g., Sawmill produces Wood).", "Implementing buildings that consume resources (e.g., Houses consume Food).", "Tick-based resource updates."] }, { title: "UI for Resource Display (UMG)", points: ["Introduction to Unreal Motion Graphics (UMG).", "Creating a HUD (Heads-Up Display) to show current resources.", "Binding UI elements to game data."] }], project: "Integrate a resource system into the city builder. Buildings now have costs and produce/consume resources. The UI displays the current resource counts. Prevent building placement if resources are insufficient." },
-                { id: 5, title: "Citizen & AI Basics", duration: 3, icon: "🤖", objectives: ["Introduce basic AI for citizens or simulation agents.", "Implement simple needs and behaviors.", "Understand pathfinding and navigation mesh."], topics: [{ title: "AI Controller & Pawn Basics", points: ["Creating AI Controllers for citizens.", "Setting up AI Pawns (character models).", "Basic movement (e.g., random walks, moving to specific points)."] }, { title: "Navigation Mesh & Pathfinding", points: ["Generating a Nav Mesh (Recast NavMesh).", "Using AI Navigation functions (Move To Actor, Move To Location)."] }, { title: "Simple Citizen Needs & Behavior", points: ["Implementing a basic 'need' system (e.g., hunger, housing).", "Citizens moving to relevant buildings to satisfy needs.", "Basic population growth/decline based on satisfaction."] }], project: "Implement simple citizens that wander around the city, can find a path to buildings, and show basic 'satisfaction' based on available resources/housing." },
-                { id: 6, title: "Advanced Systems & Polish", duration: 3, icon: "✨", objectives: ["Implement a robust Save/Load system.", "Add more complex building functionalities.", "Refine the user experience and visual polish."], topics: [{ title: "Save/Load System", points: ["Using SaveGame Objects to store game state.", "Saving and loading buildings, resources, and citizen data.", "Serialization of complex data (e.g., arrays of structs)."] }, { title: "Advanced Building Functionality", points: ["Upgrading buildings.", "Demolition mechanics.", "Road placement system (simple or spline-based)."] }, { title: "User Experience (UX) & Polish", points: ["Creating context menus for buildings (e.g., click on a building to see its stats).", "Adding sound effects (SFX) and background music.", "Visual feedback: particles, highlights, construction animations.", "Basic main menu and pause menu."] }], project: "Develop a fully functional save/load system for your city. Implement building upgrades or a basic road network. Add sound effects and a simple main menu." },
-                { id: 7, title: "Optimization & Deployment", duration: 1, icon: "🚀", objectives: ["Understand basic optimization techniques for UE5 games.", "Learn the process of packaging a game for distribution."], topics: [{ title: "Performance Optimization", points: ["Draw calls and poly counts (Nanite/Lumen considerations).", "LODs (Level of Detail) for meshes.", "Profiling tools in Unreal Engine.", "Batching and instancing."] }, { title: "Packaging & Deployment", points: ["Project settings for packaging.", "Packaging for Windows (or target platform).", "Basic troubleshooting for packaged builds."] }], project: "Optimize your city builder prototype for better performance. Package a runnable version of your game." }
+                { 
+                    id: 1, 
+                    title: "UE5 Fundamentals", 
+                    duration: 2, 
+                    icon: "🛠️", 
+                    objectives: [
+                        "Understand the Unreal Engine 5 interface and navigation.",
+                        "Master basic asset import and management.",
+                        "Learn Blueprint fundamentals and visual scripting.",
+                        "Create and modify basic actors in the world."
+                    ],
+                    topics: [
+                        {
+                            title: "Engine Interface & Navigation",
+                            points: [
+                                "Main viewport, outliner, and details panel overview",
+                                "Basic camera controls and viewport navigation",
+                                "Project settings and preferences",
+                                "Content browser organization and asset management"
+                            ]
+                        },
+                        {
+                            title: "Asset Import & Management",
+                            points: [
+                                "Importing 3D models, textures, and materials",
+                                "Setting up material instances",
+                                "Managing asset libraries and folder structures",
+                                "Working with Quixel Megascans"
+                            ]
+                        },
+                        {
+                            title: "Blueprint Basics",
+                            points: [
+                                "Creating your first Blueprint class",
+                                "Variables, functions, and events",
+                                "Basic node graph workflow",
+                                "Testing and debugging Blueprints"
+                            ]
+                        },
+                        {
+                            title: "Creating & Placing Actors",
+                            points: [
+                                "Spawning actors in the world",
+                                "Transform properties (position, rotation, scale)",
+                                "Actor components and attachments",
+                                "Basic actor lifecycle"
+                            ]
+                        }
+                    ],
+                    project: "Create a simple scene with multiple imported assets, add basic Blueprint actors with simple behaviors, and implement basic interactions."
+                },
+                { 
+                    id: 2, 
+                    title: "World Building & Camera", 
+                    duration: 2, 
+                    icon: "🌍", 
+                    objectives: [
+                        "Develop skills in creating large-scale landscapes.",
+                        "Implement a city-builder specific camera system.",
+                        "Master terrain sculpting and material application.",
+                        "Create an engaging visual environment."
+                    ],
+                    topics: [
+                        {
+                            title: "Landscape Creation",
+                            points: [
+                                "Creating and sculpting landscapes",
+                                "Height map import and editing",
+                                "Landscape layers and materials",
+                                "Performance optimization for large terrains"
+                            ]
+                        },
+                        {
+                            title: "City-Builder Camera System",
+                            points: [
+                                "Isometric or top-down camera setup",
+                                "Camera panning and zoom mechanics",
+                                "Camera constraints and bounds",
+                                "Smooth camera transitions"
+                            ]
+                        },
+                        {
+                            title: "Environmental Materials",
+                            points: [
+                                "Creating realistic material networks",
+                                "Blending terrain textures",
+                                "Environmental lighting basics",
+                                "Weather and time-of-day systems"
+                            ]
+                        },
+                        {
+                            title: "Scene Layout",
+                            points: [
+                                "Placing decorative elements and landmarks",
+                                "Creating visual hierarchy",
+                                "Water bodies and environmental features",
+                                "Optimizing draw calls"
+                            ]
+                        }
+                    ],
+                    project: "Build a large-scale city landscape with varied terrain, implement a functional city-builder camera system with zoom and pan, and apply realistic materials to the environment."
+                },
+                { 
+                    id: 3, 
+                    title: "Placement & Grid Systems", 
+                    duration: 3, 
+                    icon: "🏗️", 
+                    objectives: [
+                        "Design and implement a grid-based building system.",
+                        "Create dynamic placement previews.",
+                        "Manage building validation and snap-to-grid mechanics.",
+                        "Optimize placement logic for performance."
+                    ],
+                    topics: [
+                        {
+                            title: "Grid System Foundation",
+                            points: [
+                                "Defining grid size and alignment",
+                                "World-to-grid coordinate conversion",
+                                "Storing grid cell data structures",
+                                "Efficient grid queries and searches"
+                            ]
+                        },
+                        {
+                            title: "Building Placement Mechanics",
+                            points: [
+                                "Ray casting for placement detection",
+                                "Real-time placement preview rendering",
+                                "Valid/invalid placement visualization",
+                                "Snap-to-grid logic"
+                            ]
+                        },
+                        {
+                            title: "Validation & Collision",
+                            points: [
+                                "Overlap detection and validation",
+                                "Cost calculation and resource checking",
+                                "Placement constraints (terrain, obstacles)",
+                                "Build zone restrictions"
+                            ]
+                        },
+                        {
+                            title: "Performance Optimization",
+                            points: [
+                                "Spatial acceleration structures (quadtrees, grids)",
+                                "Batch collision checks",
+                                "Memory-efficient grid storage",
+                                "Profiling placement systems"
+                            ]
+                        }
+                    ],
+                    project: "Implement a fully functional grid-based placement system with real-time preview, validation feedback, and optimized performance for placing dozens of buildings simultaneously."
+                },
+                { 
+                    id: 4, 
+                    title: "Resource Management", 
+                    duration: 3, 
+                    icon: "💰", 
+                    objectives: [
+                        "Implement a resource collection and consumption system.",
+                        "Create a basic in-game economy (money, production, costs).",
+                        "Design resource UI and notifications.",
+                        "Balance resource flow mechanics."
+                    ],
+                    topics: [
+                        {
+                            title: "Resource System Architecture",
+                            points: [
+                                "Resource types and storage",
+                                "Production and consumption logic",
+                                "Resource generation from buildings",
+                                "Storage limits and overflow handling"
+                            ]
+                        },
+                        {
+                            title: "Economic Systems",
+                            points: [
+                                "Currency and budget management",
+                                "Building costs and maintenance fees",
+                                "Revenue generation mechanics",
+                                "Budget tracking and reporting"
+                            ]
+                        },
+                        {
+                            title: "Resource UI Display",
+                            points: [
+                                "HUD resource display",
+                                "Resource graphs and charts",
+                                "Warning indicators for low resources",
+                                "Tooltips and information panels"
+                            ]
+                        },
+                        {
+                            title: "Game Balance & Economy",
+                            points: [
+                                "Balancing income vs. expenses",
+                                "Difficulty scaling",
+                                "Resource bottlenecks",
+                                "Progression pacing"
+                            ]
+                        }
+                    ],
+                    project: "Build a complete resource management system with multiple resource types, production chains, economic balance, and a UI that clearly displays all resource metrics and changes in real-time."
+                },
+                { 
+                    id: 5, 
+                    title: "Citizen & AI Basics", 
+                    duration: 3, 
+                    icon: "🤖", 
+                    objectives: [
+                        "Introduce basic AI for citizens or simulation agents.",
+                        "Implement simple needs and behaviors.",
+                        "Create pathfinding and movement systems.",
+                        "Design agent-building interactions."
+                    ],
+                    topics: [
+                        {
+                            title: "Agent Architecture",
+                            points: [
+                                "Agent actor setup and components",
+                                "Agent state machines",
+                                "Behavior tree basics",
+                                "Perception and sensory systems"
+                            ]
+                        },
+                        {
+                            title: "Pathfinding & Navigation",
+                            points: [
+                                "Navigation mesh creation and setup",
+                                "A* pathfinding implementation",
+                                "Dynamic obstacle avoidance",
+                                "Crowd behavior simulation"
+                            ]
+                        },
+                        {
+                            title: "Agent Needs & Behaviors",
+                            points: [
+                                "Defining agent needs (hunger, rest, happiness)",
+                                "Need decay and fulfillment",
+                                "Decision-making based on needs",
+                                "Behavior priority systems"
+                            ]
+                        },
+                        {
+                            title: "Building & Agent Interaction",
+                            points: [
+                                "Agents using buildings and services",
+                                "Activity zones and interaction points",
+                                "Task queuing at buildings",
+                                "Service satisfaction tracking"
+                            ]
+                        }
+                    ],
+                    project: "Create a population of AI-driven citizens that navigate your city, fulfill needs by visiting appropriate buildings, and demonstrate visible behaviors and emotional states based on city management decisions."
+                },
+                { 
+                    id: 6, 
+                    title: "Advanced Systems & Polish", 
+                    duration: 3, 
+                    icon: "✨", 
+                    objectives: [
+                        "Implement a robust Save/Load system.",
+                        "Add more complex building functionalities.",
+                        "Refine the user experience with animations and effects.",
+                        "Integrate audio and visual feedback systems."
+                    ],
+                    topics: [
+                        {
+                            title: "Save & Load System",
+                            points: [
+                                "Serializing game state to files",
+                                "Saving and loading actor transforms",
+                                "Saving game progress and statistics",
+                                "Version management and migration"
+                            ]
+                        },
+                        {
+                            title: "Advanced Building Features",
+                            points: [
+                                "Building upgrades and variants",
+                                "Building destruction and damage",
+                                "Visual feedback systems",
+                                "Building-specific gameplay mechanics"
+                            ]
+                        },
+                        {
+                            title: "Polish & Effects",
+                            points: [
+                                "UI animations and transitions",
+                                "Particle effects and visual feedback",
+                                "Building placement celebration effects",
+                                "Selection and hover effects"
+                            ]
+                        },
+                        {
+                            title: "Audio Integration",
+                            points: [
+                                "UI sound effects",
+                                "Building construction sounds",
+                                "Ambient audio and music systems",
+                                "Audio feedback for resource changes"
+                            ]
+                        }
+                    ],
+                    project: "Add professional polish to the game including a fully functional save/load system, advanced building upgrade mechanics, comprehensive audio design, and refined visual effects that enhance player immersion and satisfaction."
+                },
+                { 
+                    id: 7, 
+                    title: "Optimization & Deployment", 
+                    duration: 1, 
+                    icon: "🚀", 
+                    objectives: [
+                        "Understand basic optimization techniques for UE5 games.",
+                        "Learn the process of packaging a game for distribution.",
+                        "Profile and debug performance issues.",
+                        "Prepare the game for release."
+                    ],
+                    topics: [
+                        {
+                            title: "Performance Profiling",
+                            points: [
+                                "Using UE5 profiling tools",
+                                "Identifying performance bottlenecks",
+                                "GPU and CPU profiling",
+                                "Memory usage analysis"
+                            ]
+                        },
+                        {
+                            title: "Optimization Techniques",
+                            points: [
+                                "LOD systems and detail reduction",
+                                "Draw call batching and instancing",
+                                "Asset compression and streaming",
+                                "Memory management best practices"
+                            ]
+                        },
+                        {
+                            title: "Packaging & Distribution",
+                            points: [
+                                "Packaging for Windows, Mac, or Linux",
+                                "Setting up distribution platforms",
+                                "Version control and release management",
+                                "Post-launch support strategies"
+                            ]
+                        },
+                        {
+                            title: "Quality Assurance",
+                            points: [
+                                "Testing on target hardware",
+                                "Bug reporting and tracking",
+                                "User feedback collection",
+                                "Patch planning and deployment"
+                            ]
+                        }
+                    ],
+                    project: "Profile and optimize your complete city-builder game for target platforms, package the final build, and prepare documentation for release including performance metrics and known limitations."
+                }
             ],
             resources: [
                 { title: "Unreal Engine 5", description: "The primary development environment." },
@@ -118,7 +468,7 @@
                                     <h4 class="text-lg font-bold text-slate-800">${module.title}</h4>
                                 </div>
                             </div>
-                            <p class="text-slate-600 text-sm">${module.objectives.join(' ')}</p>
+                            <p class="text-slate-600 text-sm">${module.duration} weeks</p>
                         </div>
                     `).join('')}
                 </div>
