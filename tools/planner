@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Calendar</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome CDN for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Custom styles for the calendar */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top to prevent content overflow */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .calendar-container {
+            background-color: #ffffff;
+            border-radius: 1rem; /* More rounded corners */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 900px; /* Max width for larger screens */
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            gap: 0.75rem; /* Space between header elements */
+        }
+
+        .calendar-header h2 {
+            font-size: 1.875rem; /* text-3xl */
+            font-weight: 700; /* font-bold */
+            color: #1a202c; /* text-gray-900 */
+            flex-grow: 1; /* Allow title to take available space */
+            text-align: center;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem; /* Gap between days */
+        }
+
+        .day-header {
+            text-align: center;
+            font-weight: 600; /* font-semibold */
+            color: #4a5568; /* text-gray-700 */
+            padding: 0.75rem 0;
+            border-bottom: 2px solid #edf2f7; /* border-gray-200 */
+        }
+
+        .calendar-day {
+            min-height: 120px; /* Increased height for more task space */
+            background-color: #f7fafc; /* bg-gray-50 */
+            border: 1px solid #e2e8f0; /* border-gray-300 */
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden; /* Hide overflow for tasks */
+            cursor: pointer; /* Indicate clickability */
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .calendar-day:hover {
+            background-color: #ebf4ff; /* bg-blue-50 */
+        }
+
+        .calendar-day.current-month {
+            background-color: #ffffff; /* bg-white for current month days */
+        }
+
+        .calendar-day.today {
+            border: 2px solid #4299e1; /* border-blue-500 */
+            box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5); /* blue-500 shadow */
+        }
+
+        .day-number {
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 600; /* font-semibold */
+            color: #2d3748; /* text-gray-800 */
+            margin-bottom: 0.5rem;
+        }
+
+        .task {
+            /* Updated for 100% width, no margin, no padding */
+            width: 100%; /* Full width */
+            height: auto; /* Height adapts to content */
+            margin: 0; /* No external margin */
+            padding: 0; /* No internal padding */
+            border-radius: 0.375rem; /* Rounded corners for blocks */
+            font-size: 0.875rem; /* text-sm */
+            color: #ffffff;
+            margin-bottom: 0.25rem; /* Keep vertical spacing between tasks */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            transition: transform 0.1s ease-in-out;
+            display: block; /* Ensure it's a block-level element */
+            text-indent: 0.5rem; /* Add a small indent for text, as padding is removed */
+            line-height: 1.5rem; /* Ensure text has enough vertical space */
+        }
+
+        .task:hover {
+            transform: translateY(-1px);
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 500px;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease-in-out;
+            position: relative;
+            /* Added for scrollable form */
+            max-height: 90vh; /* Max height before scrolling */
+            overflow-y: auto; /* Enable vertical scrolling */
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #a0aec0; /* text-gray-400 */
+            cursor: pointer;
+            transition: color 0.2s ease-in-out;
+        }
+
+        .modal-close-button:hover {
+            color: #4a5568; /* text-gray-700 */
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="date"],
+        .form-group select,
+        .form-group textarea,
+        .form-group input[type="color"] { /* Added input[type="color"] to styling */
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            color: #4a5568;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group input[type="date"]:focus,
+        .form-group select:focus,
+        .form-group textarea:focus,
+        .form-group input[type="color"]:focus { /* Added input[type="color"] to focus styling */
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary {
+            background-color: #4299e1; /* blue-500 */
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background-color: #3182ce; /* blue-600 */
+        }
+
+        .btn-secondary {
+            background-color: #cbd5e0; /* gray-300 */
+            color: #2d3748;
+        }
+
+        .btn-secondary:hover {
+            background-color: #a0aec0; /* gray-400 */
+        }
+
+        .btn-danger {
+            background-color: #f56565; /* red-500 */
+            color: #ffffff;
+        }
+
+        .btn-danger:hover {
+            background-color: #e53e3e; /* red-600 */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .calendar-container {
+                padding: 1.5rem;
+            }
+            .calendar-header h2 {
+                font-size: 1.5rem; /* text-2xl */
+            }
+            .day-header, .day-number {
+                font-size: 0.875rem; /* text-sm */
+            }
+            .calendar-day {
+                min-height: 100px; /* Slightly smaller height on mobile */
+            }
+            .task {
+                font-size: 0.75rem; /* text-xs */
+            }
+             .calendar-header {
+                flex-direction: column;
+                align-items: center;
+            }
+            .calendar-header > button,
+            .calendar-header > div {
+                width: 100%;
+                justify-content: center;
+            }
+            .calendar-header h2 {
+                order: -1; /* Move title to top on small screens */
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .calendar-container {
+                padding: 1rem;
+            }
+            .calendar-header h2 {
+                font-size: 1.25rem; /* text-xl */
+            }
+            .calendar-day {
+                min-height: 80px; /* Even smaller height on very small screens */
+                padding: 0.3rem;
+            }
+            .day-number {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calendar-container">
+        <!-- Calendar Header -->
+        <div class="calendar-header">
+            <button id="prevMonthBtn" class="btn btn-secondary px-4 py-2 rounded-lg shadow-md hover:bg-gray-400 transition-colors duration-200">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <h2 id="currentMonthYear" class="text-3xl font-bold text-gray-900"></h2>
+            <div class="flex gap-2 flex-wrap justify-center">
+                <button id="exportDataBtn" class="btn btn-secondary px-4 py-2 rounded-lg shadow-md hover:bg-gray-400 transition-colors duration-200">
+                    <i class="fas fa-file-export"></i> Export
+                </button>
+                <input type="file" id="importFileInput" accept=".json" class="hidden">
+                <button id="importDataBtn" class="btn btn-secondary px-4 py-2 rounded-lg shadow-md hover:bg-gray-400 transition-colors duration-200">
+                    <i class="fas fa-file-import"></i> Import
+                </button>
+                <button id="filterBtn" class="btn btn-secondary px-4 py-2 rounded-lg shadow-md hover:bg-gray-400 transition-colors duration-200">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <button id="nextMonthBtn" class="btn btn-secondary px-4 py-2 rounded-lg shadow-md hover:bg-gray-400 transition-colors duration-200">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Day Headers -->
+        <div class="calendar-grid">
+            <div class="day-header">Sun</div>
+            <div class="day-header">Mon</div>
+            <div class="day-header">Tue</div>
+            <div class="day-header">Wed</div>
+            <div class="day-header">Thu</div>
+            <div class="day-header">Fri</div>
+            <div class="day-header">Sat</div>
+        </div>
+
+        <!-- Calendar Days (will be populated by JS) -->
+        <div id="calendarDays" class="calendar-grid mt-4">
+            <!-- Days will be inserted here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Add/Edit Task Modal -->
+    <div id="taskModal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="closeModalBtn" class="modal-close-button">&times;</button>
+            <h3 id="modalTitle" class="text-2xl font-bold text-gray-900 mb-6">Add New Task</h3>
+            <form id="taskForm">
+                <input type="hidden" id="taskId">
+                <div class="form-group">
+                    <label for="taskName">Task Name:</label>
+                    <input type="text" id="taskName" placeholder="Enter task name" required class="focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                </div>
+                <div class="form-group">
+                    <label for="taskDescription">Task Description:</label>
+                    <textarea id="taskDescription" placeholder="Enter task description (optional)" rows="3" class="focus:border-blue-500 focus:ring-2 focus:ring-blue-200"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="taskType">Task Type:</label>
+                    <select id="taskType" class="focus:border-blue-500 focus:ring-2 focus:ring-blue-200"></select>
+                </div>
+                <div id="newTypeFields" class="form-group hidden">
+                    <label for="newTypeName">New Type Name:</label>
+                    <input type="text" id="newTypeName" placeholder="Enter new type name" class="focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                    <label for="newTypeColor" class="mt-2 block">New Type Color:</label>
+                    <input type="color" id="newTypeColor" value="#4299e1" class="w-full h-10 border-none rounded-md cursor-pointer">
+                </div>
+                <div class="form-group">
+                    <label for="taskProject">Project:</label>
+                    <select id="taskProject" class="focus:border-blue-500 focus:ring-2 focus:ring-blue-200"></select>
+                </div>
+                <div id="newProjectFields" class="form-group hidden">
+                    <label for="newProjectName">New Project Name:</label>
+                    <input type="text" id="newProjectName" placeholder="Enter new project name" class="focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                    <label for="newProjectColor" class="mt-2 block">New Project Color:</label>
+                    <input type="color" id="newProjectColor" value="#48bb78" class="w-full h-10 border-none rounded-md cursor-pointer">
+                </div>
+                <div class="form-group">
+                    <label for="taskTeam">Team:</label>
+                    <select id="taskTeam" class="focus:border-blue-500 focus:ring-2 focus:ring-blue-200"></select>
+                </div>
+                <div id="newTeamFields" class="form-group hidden">
+                    <label for="newTeamName">New Team Name:</label>
+                    <input type="text" id="newTeamName" placeholder="Enter new team name" class="focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                    <label for="newTeamColor" class="mt-2 block">New Team Color:</label>
+                    <input type="color" id="newTeamColor" value="#9f7aea" class="w-full h-10 border-none rounded-md cursor-pointer">
+                </div>
+                <div class="form-group">
+                    <label for="taskPerson">Person:</label>
+                    <select id="taskPerson" class="focus:border-blue-500 focus:ring-2 focus:ring-blue-200"></select>
+                </div>
+                <div id="newPersonFields" class="form-group hidden">
+                    <label for="newPersonName">New Person Name:</label>
+                    <input type="text" id="newPersonName" placeholder="Enter new person's name" class="focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                </div>
+                <div class="form-group">
+                    <label for="taskStartDate">Start Date:</label>
+                    <input type="date" id="taskStartDate" required class="focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                </div>
+                <div class="form-group">
+                    <label for="taskEndDate">End Date:</label>
+                    <input type="date" id="taskEndDate" required class="focus:border-blue-500 focus:ring-2 focus:ring-200">
+                </div>
+                <div class="button-group">
+                    <button type="button" id="deleteTaskBtn" class="btn btn-danger hidden">Delete</button>
+                    <button type="submit" class="btn btn-primary">Save Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Filter Modal -->
+    <div id="filterModal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="closeFilterModalBtn" class="modal-close-button">&times;</button>
+            <h3 class="text-2xl font-bold text-gray-900 mb-6">Filter Tasks</h3>
+            <form id="filterForm">
+                <div class="form-group">
+                    <label for="filterProject">Filter by Project:</label>
+                    <select id="filterProject" class="focus:border-blue-500 focus:ring-2 focus:ring-blue-200"></select>
+                </div>
+                <div class="form-group">
+                    <label for="filterType">Filter by Type:</label>
+                    <select id="filterType" class="focus:border-blue-500 focus:ring-2 focus:ring-blue-200"></select>
+                </div>
+                <div class="form-group flex items-center gap-2">
+                    <input type="checkbox" id="filterPersonal" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                    <label for="filterPersonal" class="mb-0">Show Personal Tasks Only</label>
+                </div>
+                <div class="form-group">
+                    <label for="filterStartDate">Date Range Start:</label>
+                    <input type="date" id="filterStartDate" class="focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                </div>
+                <div class="form-group">
+                    <label for="filterEndDate">Date Range End:</label>
+                    <input type="date" id="filterEndDate" class="focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                </div>
+                <div class="button-group">
+                    <button type="button" id="clearFiltersBtn" class="btn btn-secondary">Clear Filters</button>
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Custom Alert/Confirm Modal -->
+    <div id="customAlertModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="customAlertTitle" class="text-xl font-bold text-gray-900 mb-4"></h3>
+            <p id="customAlertMessage" class="mb-6 text-gray-700"></p>
+            <div class="button-group justify-end">
+                <button id="customAlertConfirmBtn" class="btn btn-primary hidden">OK</button>
+                <button id="customAlertCancelBtn" class="btn btn-secondary hidden">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript for calendar functionality
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+
+        // Load data from local storage or initialize as empty arrays
+        let tasks = JSON.parse(localStorage.getItem('calendarTasks')) || [];
+        let taskTypes = JSON.parse(localStorage.getItem('calendarTaskTypes')) || [
+            { name: 'Work', color: '#4299e1' },    // Blue
+            { name: 'Personal', color: '#48bb78' }, // Green
+            { name: 'Study', color: '#9f7aea' },   // Purple
+            { name: 'Health', color: '#ed8936' }   // Orange
+        ];
+        let projects = JSON.parse(localStorage.getItem('calendarProjects')) || [
+            { name: 'Project A', color: '#38b2ac' }, // Teal
+            { name: 'Project B', color: '#ecc94b' }  // Yellow
+        ];
+        // Teams now include a 'members' array for people
+        let teams = JSON.parse(localStorage.getItem('calendarTeams')) || [
+            { name: 'Team Alpha', color: '#ed64a6', members: ['Alice', 'Bob'] }, // Pink
+            { name: 'Team Beta', color: '#a0aec0', members: ['Charlie'] }   // Gray
+        ];
+
+        // Filter state
+        let currentFilters = {
+            project: 'all',
+            type: 'all',
+            personalOnly: false,
+            startDate: '',
+            endDate: ''
+        };
+
+        const calendarDaysEl = document.getElementById('calendarDays');
+        const currentMonthYearEl = document.getElementById('currentMonthYear');
+        const prevMonthBtn = document.getElementById('prevMonthBtn');
+        const nextMonthBtn = document.getElementById('nextMonthBtn');
+        const exportDataBtn = document.getElementById('exportDataBtn');
+        const importDataBtn = document.getElementById('importDataBtn');
+        const importFileInput = document.getElementById('importFileInput');
+        const filterBtn = document.getElementById('filterBtn'); // New: Filter button
+
+        // Task Modal Elements
+        const taskModal = document.getElementById('taskModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const taskForm = document.getElementById('taskForm');
+        const taskIdInput = document.getElementById('taskId');
+        const taskNameInput = document.getElementById('taskName');
+        const taskDescriptionInput = document.getElementById('taskDescription');
+        const taskTypeInput = document.getElementById('taskType');
+        const newTypeFields = document.getElementById('newTypeFields');
+        const newTypeNameInput = document.getElementById('newTypeName');
+        const newTypeColorInput = document.getElementById('newTypeColor');
+        const taskProjectInput = document.getElementById('taskProject'); // New: Project Select
+        const newProjectFields = document.getElementById('newProjectFields'); // New: New Project inputs
+        const newProjectNameInput = document.getElementById('newProjectName'); // New: New Project Name
+        const newProjectColorInput = document.getElementById('newProjectColor'); // New: New Project Color
+        const taskTeamInput = document.getElementById('taskTeam'); // New: Team Select
+        const newTeamFields = document.getElementById('newTeamFields'); // New: New Team inputs
+        const newTeamNameInput = document.getElementById('newTeamName'); // New: New Team Name
+        const newTeamColorInput = document.getElementById('newTeamColor'); // New: New Team Color
+        const taskPersonInput = document.getElementById('taskPerson'); // NEW: Person Select
+        const newPersonFields = document.getElementById('newPersonFields'); // NEW: New Person inputs
+        const newPersonNameInput = document.getElementById('newPersonName'); // NEW: New Person Name
+        const taskStartDateInput = document.getElementById('taskStartDate');
+        const taskEndDateInput = document.getElementById('taskEndDate');
+        const modalTitleEl = document.getElementById('modalTitle');
+        const deleteTaskBtn = document.getElementById('deleteTaskBtn');
+
+        // Filter Modal Elements
+        const filterModal = document.getElementById('filterModal');
+        const closeFilterModalBtn = document.getElementById('closeFilterModalBtn');
+        const filterForm = document.getElementById('filterForm');
+        const filterProjectInput = document.getElementById('filterProject');
+        const filterTypeInput = document.getElementById('filterType');
+        const filterPersonalInput = document.getElementById('filterPersonal');
+        const filterStartDateInput = document.getElementById('filterStartDate');
+        const filterEndDateInput = document.getElementById('filterEndDate');
+        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+
+        // Custom Alert/Confirm Logic
+        const customAlertModal = document.getElementById('customAlertModal');
+        const customAlertTitle = document.getElementById('customAlertTitle');
+        const customAlertMessage = document.getElementById('customAlertMessage');
+        const customAlertConfirmBtn = document.getElementById('customAlertConfirmBtn');
+        const customAlertCancelBtn = document.getElementById('customAlertCancelBtn');
+
+        // Function to show a custom alert
+        function showAlert(message, title = 'Alert') {
+            return new Promise(resolve => {
+                customAlertTitle.textContent = title;
+                customAlertMessage.textContent = message;
+                customAlertConfirmBtn.classList.remove('hidden');
+                customAlertCancelBtn.classList.add('hidden'); // Hide cancel for simple alert
+                customAlertModal.classList.add('show');
+
+                customAlertConfirmBtn.onclick = () => {
+                    customAlertModal.classList.remove('show');
+                    resolve(true);
+                };
+            });
+        }
+
+        // Function to show a custom confirmation dialog
+        function showConfirm(message, title = 'Confirm') {
+            return new Promise(resolve => {
+                customAlertTitle.textContent = title;
+                customAlertMessage.textContent = message;
+                customAlertConfirmBtn.classList.remove('hidden');
+                customAlertCancelBtn.classList.remove('hidden');
+                customAlertModal.classList.add('show');
+
+                customAlertConfirmBtn.onclick = () => {
+                    customAlertModal.classList.remove('show');
+                    resolve(true);
+                };
+                customAlertCancelBtn.onclick = () => {
+                    customAlertModal.classList.remove('show');
+                    resolve(false);
+                };
+            });
+        }
+
+        // Function to generate a random hex color
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        // --- Local Storage Functions ---
+        function saveTasks() {
+            localStorage.setItem('calendarTasks', JSON.stringify(tasks));
+        }
+
+        function saveTaskTypes() {
+            localStorage.setItem('calendarTaskTypes', JSON.stringify(taskTypes));
+        }
+
+        function saveProjects() {
+            localStorage.setItem('calendarProjects', JSON.stringify(projects));
+        }
+
+        function saveTeams() {
+            localStorage.setItem('calendarTeams', JSON.stringify(teams));
+        }
+
+        // --- Dropdown Population Functions ---
+        function populateDropdown(dropdownEl, items, selectedValue = null, includeNewOption = true) {
+            dropdownEl.innerHTML = ''; // Clear existing options
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = '-- Select --';
+            dropdownEl.appendChild(defaultOption);
+
+            items.forEach(item => {
+                const option = document.createElement('option');
+                // For people, 'item' is just a string name, not an object with a 'name' property
+                option.value = typeof item === 'object' ? item.name : item;
+                option.textContent = typeof item === 'object' ? item.name : item;
+                dropdownEl.appendChild(option);
+            });
+
+            if (includeNewOption) {
+                const newOption = document.createElement('option');
+                newOption.value = 'new-item';
+                newOption.textContent = 'Add New...';
+                dropdownEl.appendChild(newOption);
+            }
+
+            if (selectedValue) {
+                dropdownEl.value = selectedValue;
+            } else {
+                dropdownEl.value = ''; // Ensure default is selected if no value
+            }
+        }
+
+        function populateFilterDropdown(dropdownEl, items, allOptionText, selectedValue = 'all') {
+            dropdownEl.innerHTML = '';
+            const allOption = document.createElement('option');
+            allOption.value = 'all';
+            allOption.textContent = allOptionText;
+            dropdownEl.appendChild(allOption);
+
+            items.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.name;
+                option.textContent = item.name;
+                dropdownEl.appendChild(option);
+            });
+            dropdownEl.value = selectedValue;
+        }
+
+        // --- Task Modal Logic ---
+        function populateTaskFormDropdowns(selectedType = null, selectedProject = null, selectedTeam = null, selectedPerson = null) {
+            populateDropdown(taskTypeInput, taskTypes, selectedType);
+            populateDropdown(taskProjectInput, projects, selectedProject);
+            populateDropdown(taskTeamInput, teams, selectedTeam);
+
+            // Populate Person dropdown based on selected team
+            const selectedTeamObj = teams.find(team => team.name === taskTeamInput.value);
+            const teamMembers = selectedTeamObj ? selectedTeamObj.members : [];
+            populateDropdown(taskPersonInput, teamMembers, selectedPerson, true); // Always allow 'Add New Person'
+        }
+
+        // Event listeners for "Add New..." selections in task form
+        taskTypeInput.addEventListener('change', () => {
+            if (taskTypeInput.value === 'new-item') {
+                newTypeFields.classList.remove('hidden');
+                newTypeNameInput.required = true;
+                newTypeColorInput.value = getRandomColor();
+            } else {
+                newTypeFields.classList.add('hidden');
+                newTypeNameInput.required = false;
+            }
+        });
+
+        taskProjectInput.addEventListener('change', () => {
+            if (taskProjectInput.value === 'new-item') {
+                newProjectFields.classList.remove('hidden');
+                newProjectNameInput.required = true;
+                newProjectColorInput.value = getRandomColor();
+            } else {
+                newProjectFields.classList.add('hidden');
+                newProjectNameInput.required = false;
+            }
+        });
+
+        taskTeamInput.addEventListener('change', () => {
+            newPersonFields.classList.add('hidden'); // Hide new person fields when team changes
+            newPersonNameInput.required = false;
+            const selectedTeamObj = teams.find(team => team.name === taskTeamInput.value);
+            const teamMembers = selectedTeamObj ? selectedTeamObj.members : [];
+            populateDropdown(taskPersonInput, teamMembers, null, true); // Repopulate person dropdown
+            
+            if (taskTeamInput.value === 'new-item') {
+                newTeamFields.classList.remove('hidden');
+                newTeamNameInput.required = true;
+                newTeamColorInput.value = getRandomColor();
+                taskPersonInput.disabled = true; // Disable person dropdown for new team
+            } else {
+                newTeamFields.classList.add('hidden');
+                newTeamNameInput.required = false;
+                taskPersonInput.disabled = false; // Enable person dropdown for existing team
+            }
+        });
+
+        taskPersonInput.addEventListener('change', () => {
+            if (taskPersonInput.value === 'new-item') {
+                newPersonFields.classList.remove('hidden');
+                newPersonNameInput.required = true;
+            } else {
+                newPersonFields.classList.add('hidden');
+                newPersonNameInput.required = false;
+            }
+        });
+
+        // Function to open the task modal
+        function openTaskModal(date = null, taskId = null) {
+            taskForm.reset(); // Clear form
+            taskIdInput.value = '';
+            deleteTaskBtn.classList.add('hidden'); // Hide delete button by default
+            modalTitleEl.textContent = 'Add New Task';
+            newTypeFields.classList.add('hidden'); // Hide new type fields
+            newProjectFields.classList.add('hidden'); // Hide new project fields
+            newTeamFields.classList.add('hidden'); // Hide new team fields
+            newPersonFields.classList.add('hidden'); // Hide new person fields
+            newTypeNameInput.required = false;
+            newProjectNameInput.required = false;
+            newTeamNameInput.required = false;
+            newPersonNameInput.required = false;
+            taskPersonInput.disabled = false; // Enable person dropdown by default
+
+            if (date) {
+                // If opening to add a new task for a specific date
+                taskStartDateInput.value = date;
+                taskEndDateInput.value = date;
+                populateTaskFormDropdowns(); // Populate with no pre-selection
+            }
+
+            if (taskId) {
+                // If opening to edit an existing task
+                modalTitleEl.textContent = 'Edit Task';
+                const taskToEdit = tasks.find(t => t.id === taskId);
+                if (taskToEdit) {
+                    taskIdInput.value = taskToEdit.id;
+                    taskNameInput.value = taskToEdit.name;
+                    taskDescriptionInput.value = taskToEdit.description || '';
+                    taskStartDateInput.value = taskToEdit.startDate;
+                    taskEndDateInput.value = taskToEdit.endDate;
+
+                    // Populate dropdowns with task's current values
+                    populateTaskFormDropdowns(taskToEdit.type, taskToEdit.project, taskToEdit.team, taskToEdit.person);
+
+                    // Handle cases where type/project/team/person might be 'new-item' or not found
+                    if (!taskTypes.some(t => t.name === taskToEdit.type) && taskToEdit.type) {
+                        taskTypeInput.value = 'new-item';
+                        newTypeFields.classList.remove('hidden');
+                        newTypeNameInput.value = taskToEdit.type;
+                        newTypeColorInput.value = taskTypes.find(t => t.name === taskToEdit.type)?.color || getRandomColor();
+                    }
+                    if (!projects.some(p => p.name === taskToEdit.project) && taskToEdit.project) {
+                        taskProjectInput.value = 'new-item';
+                        newProjectFields.classList.remove('hidden');
+                        newProjectNameInput.value = taskToEdit.project;
+                        newProjectColorInput.value = projects.find(p => p.name === taskToEdit.project)?.color || getRandomColor();
+                    }
+                    if (!teams.some(t => t.name === taskToEdit.team) && taskToEdit.team) {
+                        taskTeamInput.value = 'new-item';
+                        newTeamFields.classList.remove('hidden');
+                        newTeamNameInput.value = taskToEdit.team;
+                        newTeamColorInput.value = teams.find(t => t.name === taskToEdit.team)?.color || getRandomColor();
+                        taskPersonInput.disabled = true; // Disable person dropdown for new team
+                    } else {
+                        // If team exists, check if person exists in that team's members
+                        const selectedTeamObj = teams.find(team => team.name === taskToEdit.team);
+                        if (selectedTeamObj && !selectedTeamObj.members.includes(taskToEdit.person) && taskToEdit.person) {
+                            taskPersonInput.value = 'new-item';
+                            newPersonFields.classList.remove('hidden');
+                            newPersonNameInput.value = taskToEdit.person;
+                        }
+                    }
+
+                    deleteTaskBtn.classList.remove('hidden');
+                }
+            }
+
+            taskModal.classList.add('show');
+        }
+
+        // Function to close the task modal
+        function closeTaskModal() {
+            console.log('Attempting to close task modal.');
+            taskModal.classList.remove('show');
+            console.log('taskModal has "show" class after removal attempt:', taskModal.classList.contains('show'));
+        }
+
+        // Handle form submission for adding/editing tasks
+        taskForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const id = taskIdInput.value || crypto.randomUUID();
+            const name = taskNameInput.value;
+            const description = taskDescriptionInput.value;
+            const startDate = taskStartDateInput.value;
+            const endDate = taskEndDateInput.value;
+
+            let type = taskTypeInput.value;
+            let project = taskProjectInput.value;
+            let team = taskTeamInput.value;
+            let person = taskPersonInput.value;
+
+            // Handle new type creation
+            if (type === 'new-item') {
+                const newTypeName = newTypeNameInput.value.trim();
+                if (newTypeName) {
+                    type = newTypeName;
+                    const newColor = newTypeColorInput.value || getRandomColor();
+                    const existingType = taskTypes.find(t => t.name === type);
+                    if (!existingType) {
+                        taskTypes.push({ name: type, color: newColor });
+                        saveTaskTypes();
+                    } else if (existingType.color !== newColor) {
+                        existingType.color = newColor;
+                        saveTaskTypes();
+                    }
+                } else {
+                    await showAlert('Please enter a name for the new task type.', 'Input Required');
+                    return; // Prevents modal from closing on validation error
+                }
+            }
+            // Handle new project creation
+            if (project === 'new-item') {
+                const newProjectName = newProjectNameInput.value.trim();
+                if (newProjectName) {
+                    project = newProjectName;
+                    const newColor = newProjectColorInput.value || getRandomColor();
+                    const existingProject = projects.find(p => p.name === project);
+                    if (!existingProject) {
+                        projects.push({ name: project, color: newColor });
+                        saveProjects();
+                    } else if (existingProject.color !== newColor) {
+                        existingProject.color = newColor;
+                        saveProjects();
+                    }
+                } else {
+                    await showAlert('Please enter a name for the new project.', 'Input Required');
+                    return; // Prevents modal from closing on validation error
+                }
+            }
+            // Handle new team creation
+            if (team === 'new-item') {
+                const newTeamName = newTeamNameInput.value.trim();
+                if (newTeamName) {
+                    team = newTeamName;
+                    const newColor = newTeamColorInput.value || getRandomColor();
+                    const existingTeam = teams.find(t => t.name === team);
+                    if (!existingTeam) {
+                        teams.push({ name: team, color: newColor, members: [] }); // Initialize members array
+                        saveTeams();
+                    } else if (existingTeam.color !== newColor) {
+                        existingTeam.color = newColor;
+                        saveTeams();
+                    }
+                } else {
+                    await showAlert('Please enter a name for the new team.', 'Input Required');
+                    return; // Prevents modal from closing on validation error
+                }
+            }
+
+            // Handle new person creation (must be after team handling)
+            if (person === 'new-item') {
+                const newPersonName = newPersonNameInput.value.trim();
+                if (newPersonName) {
+                    person = newPersonName;
+                    const targetTeam = teams.find(t => t.name === team);
+                    if (targetTeam) { // Ensure targetTeam exists before adding member
+                        if (!targetTeam.members.includes(newPersonName)) {
+                            targetTeam.members.push(newPersonName);
+                            saveTeams(); // Save teams as members array has changed
+                        }
+                    } else {
+                        // This case should ideally not happen if team selection is handled correctly
+                        await showAlert('Cannot add person: Selected team does not exist.', 'Error');
+                        return;
+                    }
+                } else {
+                    await showAlert('Please enter a name for the new person.', 'Input Required');
+                    return; // Prevents modal from closing on validation error
+                }
+            }
+
+
+            const newTask = { id, name, description, startDate, endDate, type, project, team, person }; // Include person
+
+            if (taskIdInput.value) {
+                const index = tasks.findIndex(t => t.id === taskIdInput.value);
+                if (index !== -1) {
+                    tasks[index] = newTask;
+                }
+            } else {
+                tasks.push(newTask);
+            }
+
+            saveTasks();
+            closeTaskModal();
+            renderCalendar();
+        });
+
+        // Handle delete task button click
+        deleteTaskBtn.addEventListener('click', async () => {
+            const confirmed = await showConfirm('Are you sure you want to delete this task?', 'Confirm Deletion');
+            if (confirmed) {
+                const taskIdToDelete = taskIdInput.value;
+                tasks = tasks.filter(t => t.id !== taskIdToDelete);
+                saveTasks();
+                closeTaskModal();
+                renderCalendar();
+            }
+        });
+
+        // --- Calendar Rendering Logic ---
+        function renderCalendar() {
+            calendarDaysEl.innerHTML = '';
+            const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const firstDayOfWeek = firstDayOfMonth.getDay();
+
+            currentMonthYearEl.textContent = new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long', year: 'numeric' });
+
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.classList.add('calendar-day', 'bg-gray-50', 'text-gray-400');
+                calendarDaysEl.appendChild(emptyDay);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayEl = document.createElement('div');
+                dayEl.classList.add('calendar-day', 'current-month');
+                dayEl.dataset.date = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+                const dayNumberEl = document.createElement('div');
+                dayNumberEl.classList.add('day-number');
+                dayNumberEl.textContent = day;
+                dayEl.appendChild(dayNumberEl);
+
+                const today = new Date();
+                if (day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) {
+                    dayEl.classList.add('today');
+                }
+
+                dayEl.addEventListener('click', () => openTaskModal(dayEl.dataset.date));
+                calendarDaysEl.appendChild(dayEl);
+            }
+
+            renderTasksOnCalendar();
+        }
+
+        // Function to render tasks on the calendar based on current filters
+        function renderTasksOnCalendar() {
+            document.querySelectorAll('.calendar-day .task').forEach(taskEl => taskEl.remove());
+
+            const filteredTasks = tasks.filter(task => {
+                const taskStartDate = new Date(task.startDate + 'T00:00:00'); // Ensure date comparison is consistent
+                const taskEndDate = new Date(task.endDate + 'T23:59:59'); // Ensure date comparison is consistent
+
+                // Filter by Project
+                if (currentFilters.project !== 'all' && task.project !== currentFilters.project) {
+                    return false;
+                }
+                // Filter by Type
+                if (currentFilters.type !== 'all' && task.type !== currentFilters.type) {
+                    return false;
+                }
+                // Filter by Personal Only
+                if (currentFilters.personalOnly && task.type !== 'Personal') {
+                    return false;
+                }
+                // Filter by Date Range
+                if (currentFilters.startDate && taskEndDate < new Date(currentFilters.startDate + 'T00:00:00')) {
+                    return false;
+                }
+                if (currentFilters.endDate && taskStartDate > new Date(currentFilters.endDate + 'T23:59:59')) {
+                    return false;
+                }
+                return true;
+            });
+
+            filteredTasks.forEach(task => {
+                const startDate = new Date(task.startDate);
+                const endDate = new Date(task.endDate);
+
+                // Determine task color: Type > Project > Team
+                let displayColor = '#ccc'; // Default grey
+                if (task.type) {
+                    displayColor = taskTypes.find(type => type.name === task.type)?.color || displayColor;
+                }
+                if (task.project) {
+                    displayColor = projects.find(project => project.name === task.project)?.color || displayColor;
+                }
+                if (task.team) {
+                    displayColor = teams.find(team => team.name === task.team)?.color || displayColor;
+                }
+
+
+                for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                    if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+                        const dateString = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                        const dayEl = document.querySelector(`.calendar-day[data-date="${dateString}"]`);
+
+                        if (dayEl) {
+                            const taskEl = document.createElement('div');
+                            taskEl.classList.add('task');
+                            taskEl.style.backgroundColor = displayColor;
+
+                            // Prefix task name with first two characters of person's name
+                            let taskText = task.name;
+                            if (task.person && task.person.length >= 2) {
+                                taskText = `${task.person.substring(0, 2).toUpperCase()}: ${task.name}`;
+                            } else if (task.person) {
+                                taskText = `${task.person.toUpperCase()}: ${task.name}`; // If less than 2 chars, use full name
+                            }
+                            taskEl.textContent = taskText;
+                            taskEl.dataset.taskId = task.id;
+
+                            taskEl.addEventListener('click', (event) => {
+                                event.stopPropagation();
+                                openTaskModal(null, task.id);
+                            });
+                            dayEl.appendChild(taskEl);
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Filter Modal Logic ---
+        filterBtn.addEventListener('click', () => {
+            populateFilterDropdown(filterProjectInput, projects, 'All Projects', currentFilters.project);
+            populateFilterDropdown(filterTypeInput, taskTypes, 'All Types', currentFilters.type);
+            filterPersonalInput.checked = currentFilters.personalOnly;
+            filterStartDateInput.value = currentFilters.startDate;
+            filterEndDateInput.value = currentFilters.endDate;
+            filterModal.classList.add('show');
+        });
+
+        closeFilterModalBtn.addEventListener('click', () => {
+            filterModal.classList.remove('show');
+        });
+
+        filterModal.addEventListener('click', (event) => {
+            if (event.target === filterModal) {
+                filterModal.classList.remove('show');
+            }
+        });
+
+        filterForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            currentFilters.project = filterProjectInput.value;
+            currentFilters.type = filterTypeInput.value;
+            currentFilters.personalOnly = filterPersonalInput.checked;
+            currentFilters.startDate = filterStartDateInput.value;
+            currentFilters.endDate = filterEndDateInput.value;
+            renderCalendar(); // Re-render calendar with new filters
+            filterModal.classList.remove('show');
+        });
+
+        clearFiltersBtn.addEventListener('click', () => {
+            currentFilters = {
+                project: 'all',
+                type: 'all',
+                personalOnly: false,
+                startDate: '',
+                endDate: ''
+            };
+            filterForm.reset(); // Reset form fields
+            populateFilterDropdown(filterProjectInput, projects, 'All Projects', 'all');
+            populateFilterDropdown(filterTypeInput, taskTypes, 'All Types', 'all');
+            renderCalendar(); // Re-render calendar without filters
+            filterModal.classList.remove('show');
+        });
+
+        // --- Import/Export Functions ---
+        exportDataBtn.addEventListener('click', () => {
+            const dataToExport = {
+                tasks: tasks,
+                taskTypes: taskTypes,
+                projects: projects,
+                teams: teams
+            };
+            const jsonString = JSON.stringify(dataToExport, null, 2);
+
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'calendar_data.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showAlert('Calendar data exported successfully!', 'Export Complete');
+        });
+
+        importDataBtn.addEventListener('click', () => {
+            importFileInput.click();
+        });
+
+        importFileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+
+                    // Validate imported data structure
+                    if (importedData.tasks && Array.isArray(importedData.tasks) &&
+                        importedData.taskTypes && Array.isArray(importedData.taskTypes) &&
+                        importedData.projects && Array.isArray(importedData.projects) &&
+                        importedData.teams && Array.isArray(importedData.teams)) {
+
+                        const confirmed = await showConfirm(
+                            'Importing data will overwrite your current calendar data. Are you sure?',
+                            'Confirm Import'
+                        );
+
+                        if (confirmed) {
+                            tasks = importedData.tasks;
+                            taskTypes = importedData.taskTypes;
+                            projects = importedData.projects;
+                            teams = importedData.teams;
+                            saveTasks();
+                            saveTaskTypes();
+                            saveProjects();
+                            saveTeams();
+                            renderCalendar();
+                            showAlert('Calendar data imported successfully!', 'Import Complete');
+                        }
+                    } else {
+                        showAlert('Invalid JSON file format. Please ensure it contains "tasks", "taskTypes", "projects", and "teams" arrays.', 'Import Error');
+                    }
+                } catch (error) {
+                    console.error('Error parsing imported file:', error);
+                    showAlert('Failed to read or parse the imported file. Please ensure it is a valid JSON.', 'Import Error');
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.onerror = () => {
+                showAlert('Error reading file. Please try again.', 'Import Error');
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        });
+
+        // Add event listener for Escape key to close modals
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                if (taskModal.classList.contains('show')) {
+                    closeTaskModal();
+                } else if (filterModal.classList.contains('show')) {
+                    filterModal.classList.remove('show');
+                }
+                // For custom alert/confirm, pressing ESC simulates a cancel/OK click
+                else if (customAlertModal.classList.contains('show')) {
+                    if (!customAlertConfirmBtn.classList.contains('hidden') && !customAlertCancelBtn.classList.contains('hidden')) { // It's a confirm
+                        customAlertCancelBtn.click();
+                    } else { // It's an alert
+                        customAlertConfirmBtn.click();
+                    }
+                }
+            }
+        });
+
+        // Event listener for the 'x' button on the task modal
+        closeModalBtn.addEventListener('click', () => {
+            console.log('Close button clicked for task modal.');
+            closeTaskModal();
+        });
+
+        // Event listener for clicking outside the task modal content
+        taskModal.addEventListener('click', (event) => {
+            if (event.target === taskModal) {
+                console.log('Overlay clicked for task modal.');
+                closeTaskModal();
+            }
+        });
+
+        // --- Month Navigation ---
+        prevMonthBtn.addEventListener('click', () => {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        });
+
+        nextMonthBtn.addEventListener('click', () => {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        });
+
+        // Initial render
+        renderCalendar();
+    </script>
+</body>
+</html>
