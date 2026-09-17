@@ -1,1 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D Bookmark</title>
+  <style>
+    :root {
+      --ink: #f8f4ff;
+      --muted: #b9afd0;
+      --accent: #ff6b8a;
+      --accent-2: #8d7aff;
+      --page: #fffaf3;
+      --cover: #241d3d;
+      --cover-side: #171226;
+    }
 
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      overflow: hidden;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 18% 15%, rgba(141, 122, 255, .28), transparent 30%),
+        radial-gradient(circle at 84% 80%, rgba(255, 107, 138, .2), transparent 28%),
+        #0e0a1b;
+    }
+
+    .scene {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      perspective: 1400px;
+      padding: 2rem;
+    }
+
+    .layout {
+      width: min(100%, 1020px);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(2rem, 7vw, 7rem);
+      align-items: center;
+    }
+
+    .intro { max-width: 450px; }
+    .eyebrow {
+      color: var(--accent);
+      font-size: .75rem;
+      font-weight: 800;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: .7rem 0 1rem;
+      font-size: clamp(3rem, 7vw, 5.8rem);
+      line-height: .9;
+      letter-spacing: -.08em;
+    }
+    h1 span {
+      display: block;
+      color: transparent;
+      -webkit-text-stroke: 1px rgba(255,255,255,.65);
+    }
+    p { color: var(--muted); line-height: 1.7; max-width: 35ch; }
+    .hint {
+      display: inline-flex;
+      gap: .55rem;
+      align-items: center;
+      margin-top: 1rem;
+      color: var(--ink);
+      font-size: .82rem;
+    }
+    .hint::before {
+      content: "";
+      width: 2.4rem;
+      height: 1px;
+      background: var(--accent);
+    }
+
+    .book-wrap {
+      position: relative;
+      width: min(100%, 390px);
+      aspect-ratio: 1 / 1.1;
+      display: grid;
+      place-items: center;
+      transform-style: preserve-3d;
+      transform: rotateX(8deg) rotateY(-18deg) rotateZ(2deg);
+      transition: transform .7s cubic-bezier(.2,.8,.2,1);
+    }
+    .book-wrap:hover { transform: rotateX(4deg) rotateY(-2deg) rotateZ(0deg) translateY(-8px); }
+
+    .book-shadow {
+      position: absolute;
+      width: 80%; height: 12%;
+      bottom: 9%; left: 10%;
+      background: #000;
+      opacity: .45;
+      filter: blur(22px);
+      transform: rotate(-8deg) translateZ(-70px);
+      border-radius: 50%;
+    }
+    .book {
+      position: relative;
+      width: 72%; height: 69%;
+      transform-style: preserve-3d;
+      transform: translateZ(0);
+      filter: drop-shadow(18px 22px 16px rgba(0,0,0,.28));
+    }
+    .cover, .pages, .spine { position: absolute; inset: 0; border-radius: 7px 13px 13px 7px; }
+    .cover {
+      background: linear-gradient(135deg, #392d62, var(--cover));
+      border: 1px solid rgba(255,255,255,.17);
+      transform: translateZ(22px);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), inset -15px -12px 28px rgba(0,0,0,.2);
+    }
+    .cover::before {
+      content: "";
+      position: absolute; inset: 10%;
+      border: 1px solid rgba(255,255,255,.24);
+      border-radius: 4px 10px 10px 4px;
+    }
+    .cover::after {
+      content: "✦";
+      position: absolute; inset: 0;
+      display: grid; place-items: center;
+      color: #ffd9e2;
+      font-size: 4rem;
+      text-shadow: 0 0 22px var(--accent);
+    }
+    .pages {
+      background: repeating-linear-gradient(0deg, #fffaf3 0 3px, #e8ded2 3px 4px);
+      transform: translateZ(7px) translateX(6px);
+      border: 1px solid #ded1c5;
+    }
+    .pages::after {
+      content: "";
+      position: absolute; top: 4%; bottom: 4%; left: 7%; width: 3px;
+      background: rgba(70, 48, 80, .16);
+    }
+    .spine {
+      width: 22px; left: -16px; right: auto;
+      background: linear-gradient(90deg, var(--cover-side), #302653);
+      transform-origin: right center;
+      transform: rotateY(-90deg) translateZ(11px);
+      border-radius: 5px 0 0 5px;
+    }
+    .ribbon {
+      position: absolute;
+      z-index: 5;
+      left: 47%; top: 50%;
+      width: 30px; height: 68%;
+      background: linear-gradient(90deg, #ff456e, var(--accent));
+      transform: translateZ(27px) rotate(2deg);
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 87%, 0 100%);
+      box-shadow: 4px 6px 10px rgba(0,0,0,.22);
+    }
+    .bookmark-card {
+      position: absolute;
+      z-index: 6;
+      right: -2%; top: 8%;
+      width: 33%; height: 66%;
+      padding: 1.2rem .8rem;
+      display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+      color: #211835;
+      text-align: center;
+      background: linear-gradient(150deg, #ffe9ee, #ff9eb3);
+      border-radius: 5px 7px 12px 5px;
+      transform: translateZ(53px) rotate(7deg);
+      box-shadow: 15px 18px 22px rgba(0,0,0,.28), inset 2px 0 rgba(255,255,255,.7);
+    }
+    .bookmark-card::after {
+      content: "";
+      position: absolute; bottom: 0; left: 0; right: 0; height: 16%;
+      background: linear-gradient(135deg, transparent 50%, #ff6b8a 51% 100%);
+    }
+    .bookmark-card b { font-size: .72rem; letter-spacing: .16em; writing-mode: vertical-rl; }
+    .bookmark-card strong { font-size: 1.8rem; line-height: 1; }
+    .bookmark-card small { font-size: .6rem; letter-spacing: .08em; text-transform: uppercase; }
+
+    @media (max-width: 700px) {
+      body { overflow: auto; }
+      .scene { padding: 2.5rem 1.5rem; }
+      .layout { grid-template-columns: 1fr; gap: 1rem; }
+      .intro { text-align: center; margin: auto; }
+      p { margin-left: auto; margin-right: auto; }
+      .hint { justify-content: center; }
+      .book-wrap { margin: auto; max-width: 360px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="scene">
+    <div class="layout">
+      <section class="intro">
+        <div class="eyebrow">A little place to pause</div>
+        <h1>Mark your <span>moment.</span></h1>
+        <p>A tactile, dimensional bookmark for the stories worth returning to. Move your cursor over the book to explore its depth.</p>
+        <div class="hint">Hover to rotate the scene</div>
+      </section>
+
+      <section class="book-wrap" aria-label="A 3D open book with a bookmark">
+        <div class="book-shadow"></div>
+        <div class="book">
+          <div class="pages"></div>
+          <div class="spine"></div>
+          <div class="cover"></div>
+          <div class="ribbon"></div>
+          <div class="bookmark-card">
+            <b>READ · DREAM · RETURN</b>
+            <strong>✦</strong>
+            <small>chapter one</small>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
